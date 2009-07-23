@@ -55,7 +55,7 @@ client.o: client.cpp client.h server.h exception.h config.h worker.h auth.h time
 server.o: server.cpp server.h client.h utility.h config.h worker.h auth.h time.h echo.h tun.h tun_dev.h
 	g++ -c server.cpp $(CFLAGS)
 
-auth.o: auth.cpp auth.h sha1.h
+auth.o: auth.cpp auth.h sha1.h utility.h
 	g++ -c auth.cpp $(CFLAGS)
 
 worker.o: worker.cpp worker.h tun.h exception.h time.h echo.h tun_dev.h

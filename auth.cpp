@@ -19,21 +19,13 @@
 
 #include "auth.h"
 #include "sha1.h"
+#include "utility.h"
 
-#include <stdlib.h>
 #include <arpa/inet.h>
-
-bool Auth::randInitialized = false;
 
 Auth::Auth(const char *passphrase)
 {
 	this->passphrase = passphrase;
-
-	if (!randInitialized)
-	{
-		srand(time(NULL));
-		randInitialized = true;
-	}
 }
 
 Auth::Response Auth::getResponse(const Challenge &challenge) const
@@ -59,7 +51,7 @@ Auth::Challenge Auth::generateChallenge(int length) const
 	challenge.resize(length);
 
 	for (int i = 0; i < length; i++)
-		challenge[i] = rand();
+		challenge[i] = Utility::rand();
 
 	return challenge;
 }

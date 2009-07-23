@@ -43,8 +43,6 @@ public:
 protected:
 	std::string passphrase;
 	std::string challenge;
-
-	static bool randInitialized;
 };
 
 #endif
