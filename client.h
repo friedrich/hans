@@ -43,7 +43,7 @@ protected:
 		STATE_ESTABLISHED
 	};
 
-	virtual bool handleEchoData(TunnelHeader header, int dataLength, uint32_t realIp, bool reply, int id, int seq);
+	virtual bool handleEchoData(const TunnelHeader &header, int dataLength, uint32_t realIp, bool reply, int id, int seq);
 	virtual void handleTunData(int dataLength, uint32_t sourceIp, uint32_t destIp);
 	virtual void handleTimeout();
 

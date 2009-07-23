@@ -49,7 +49,7 @@ Server::~Server()
 
 }
 
-void Server::handleUnknownClient(TunnelHeader &header, int dataLength, uint32_t realIp)
+void Server::handleUnknownClient(const TunnelHeader &header, int dataLength, uint32_t realIp)
 {
 	ClientData client;
 	client.realIp = realIp;
@@ -146,9 +146,9 @@ void Server::sendReset(ClientData *client)
 	sendEchoToClient(client, TunnelHeader::TYPE_RESET_CONNECTION, 0);
 }
 
-bool Server::handleEchoData(TunnelHeader header, int dataLength, uint32_t realIp, bool reply, int id, int seq)
+bool Server::handleEchoData(const TunnelHeader &header, int dataLength, uint32_t realIp, bool reply, int id, int seq)
 {
-	if (reply || id != ICMP_ID)
+	if (reply)
 		return false;
 
 	if (header.magic != Client::magic)

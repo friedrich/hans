@@ -78,9 +78,9 @@ void Client::sendChallengeResponse(int dataLength)
 	setTimeout(5000);
 }
 
-bool Client::handleEchoData(TunnelHeader header, int dataLength, uint32_t realIp, bool reply, int id, int seq)
+bool Client::handleEchoData(const TunnelHeader &header, int dataLength, uint32_t realIp, bool reply, int id, int seq)
 {
-	if (realIp != serverIp || !reply || id != ICMP_ID)
+	if (realIp != serverIp || !reply)
 		return false;
 
 	if (header.magic != Server::magic)

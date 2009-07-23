@@ -33,8 +33,30 @@
 void usage()
 {
 	printf(
-		"usage: hans -s network [-fhr] [-p password] [-u unprivileged_user] [-d tun_device] [-m mtu]\n"
-		"       hans -c server  [-fhw] [-p password] [-u unprivileged_user] [-d tun_device] [-m mtu]\n");
+		"Hans - IP over ICMP version 0.1 dev\n\n"
+		"RUN AS SERVER\n"
+		"  hans -s network [-fr] [-p password] [-u unprivileged_user] [-d tun_device] [-m reference_mtu]\n\n"
+		"RUN AS CLIENT\n"
+		"  hans -c server  [-f]  [-p password] [-u unprivileged_user] [-d tun_device] [-m reference_mtu] [-w polls]\n\n"
+		"ARGUMENTS\n"
+		"  -s network    Run as a server with the given network address for the virtual interface.\n"
+		"  -c server     Connect to a server.\n"
+		"  -f            Run in foreground.\n"
+		"  -r            Respond to ordinary pings. Only in server mode.\n"
+		"                Use this when you disable echo replies of your operating system, which is a good idea.\n"
+		"  -p password   Use a password.\n"
+		"  -u username   Set the user under which the program should run.\n"
+		"  -d device     Use the given tun device.\n"
+		"  -m mtu        Use this mtu to calculate the tunnel mtu.\n"
+		"                The generated ICMP packets will not be bigger than this value.\n"
+		"                Has to be the same on client and server.\n"
+		"                In most cases you don't want to set this. Defaults to 1500.\n"
+		"  -w polls      Number of echo requests the client sends to the server for polling.\n"
+		"                If your network allows unlimited echo replies set this to 0 to disable polling.\n"
+		"                The default value of 10 is regarded as pretty high.\n"
+		"                Set this to a lower value if you experience packet loss through the tunnel.\n"
+		"                Set this to 1 in extreme cases, when your network allows only one echo reply per request.\n"
+		"                A low value will decrease the performance of the tunnel.\n");
 }
 
 int main(int argc, char *argv[])
@@ -56,15 +78,12 @@ int main(int argc, char *argv[])
 	openlog(argv[0], LOG_PERROR, LOG_DAEMON);
 
 	int c;
-	while ((c = getopt(argc, argv, "fhru:d:p:s:c:m:w:")) != -1)
+	while ((c = getopt(argc, argv, "fru:d:p:s:c:m:w:")) != -1)
 	{
 		switch(c) {
 			case 'f':
 				foreground = true;
 				break;
-			case 'h':
-				usage();
-				return 0;
 			case 'u':
 				userName = optarg;
 				break;
@@ -100,19 +119,16 @@ int main(int argc, char *argv[])
 
 	mtu -= Echo::headerSize() + Worker::headerSize();
 
-	if (isClient == isServer)
+	if (mtu < 68)
 	{
-		usage();
+		// RFC 791: Every internet module must be able to forward a datagram of 68 octets without further fragmentation.
+		printf("mtu too small\n");
 		return 1;
 	}
 
-	if (network == INADDR_NONE && isServer)
-	{
-		usage();
-		return 1;
-	}
-
-	if (maxPolls < 0 || maxPolls > 255)
+	if ((isClient == isServer) ||
+		(isServer && network == INADDR_NONE) ||
+		(maxPolls < 0 || maxPolls > 255))
 	{
 		usage();
 		return 1;

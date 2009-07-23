@@ -74,7 +74,7 @@ protected:
 	typedef std::vector<ClientData> ClientList;
 	typedef std::map<uint32_t, int> ClientIpMap;
 
-	virtual bool handleEchoData(TunnelHeader header, int dataLength, uint32_t realIp, bool reply, int id, int seq);
+	virtual bool handleEchoData(const TunnelHeader &header, int dataLength, uint32_t realIp, bool reply, int id, int seq);
 	virtual void handleTunData(int dataLength, uint32_t sourceIp, uint32_t destIp);
 	virtual void handleTimeout();
 
@@ -82,7 +82,7 @@ protected:
 
 	void serveTun(ClientData *client);
 
-	void handleUnknownClient(TunnelHeader &header, int dataLength, uint32_t realIp);
+	void handleUnknownClient(const TunnelHeader &header, int dataLength, uint32_t realIp);
 	void removeClient(ClientData *client);
 
 	void sendChallenge(ClientData *client);

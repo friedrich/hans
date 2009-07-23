@@ -41,7 +41,9 @@ protected:
 	{
 		struct Magic
 		{
+			Magic() { }
 			Magic(const char *magic);
+
 			bool operator==(const Magic &other) const;
 			bool operator!=(const Magic &other) const;
 
@@ -65,11 +67,11 @@ protected:
 		};
 	}; // size = 5
 
-	virtual bool handleEchoData(TunnelHeader header, int dataLength, uint32_t realIp, bool reply, int id, int seq) { return true; }
+	virtual bool handleEchoData(const TunnelHeader &header, int dataLength, uint32_t realIp, bool reply, int id, int seq) { return true; }
 	virtual void handleTunData(int dataLength, uint32_t sourceIp, uint32_t destIp) { }
 	virtual void handleTimeout() { }
 
-	void sendEcho(const TunnelHeader::Magic &magic, int type, int length, uint32_t realIp, bool reply, int id, int seq);
+	void sendEcho(const TunnelHeader::Magic &magic, uint16_t pollSequence, int type, int length, uint32_t realIp, bool reply, int id, int seq);
 	void sendToTun(int length);
 
 	void setTimeout(Time delta);
