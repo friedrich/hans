@@ -48,6 +48,7 @@ Worker::Worker(int tunnelMtu, const char *deviceName, bool answerEcho, uid_t uid
 	this->answerEcho = answerEcho;
 	this->uid = uid;
 	this->gid = gid;
+	this->privilegesDropped = false;
 
 	echo = NULL;
 	tun = NULL;
@@ -72,7 +73,7 @@ Worker::~Worker()
 	delete tun;
 }
 
-void Worker::sendEcho(const TunnelHeader::Magic &magic, int type, int length, uint32_t realIp, bool reply, int id, int seq)
+void Worker::sendEcho(const TunnelHeader::Magic &magic, int type, int length, uint32_t realIp, bool reply, uint16_t id, uint16_t seq)
 {
 	if (length > payloadBufferSize())
 		throw Exception("packet too big");
@@ -135,7 +136,7 @@ void Worker::run()
 		if (FD_ISSET(echo->getFd(), &fs))
 		{
 			bool reply;
-			int id, seq;
+			uint16_t id, seq;
 			uint32_t ip;
 
 			int dataLength = echo->receive(ip, reply, id, seq);
@@ -168,7 +169,7 @@ void Worker::run()
 
 void Worker::dropPrivileges()
 {
-	if (uid <= 0)
+	if (uid <= 0 || privilegesDropped)
 		return;
 
 	syslog(LOG_INFO, "dropping privileges");
@@ -178,4 +179,6 @@ void Worker::dropPrivileges()
 
 	if (setuid(uid) == -1)
 		throw Exception("setuid", true);
+
+	privilegesDropped = true;
 }

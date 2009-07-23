@@ -63,7 +63,7 @@ protected:
 		std::queue<Packet> pendingPackets;
 
 		int maxPolls;
-		std::queue<Time> pollTimes;
+		std::queue<uint16_t> pollIds;
 		Time lastActivity;
 
 		State state;
@@ -74,7 +74,7 @@ protected:
 	typedef std::vector<ClientData> ClientList;
 	typedef std::map<uint32_t, int> ClientIpMap;
 
-	virtual bool handleEchoData(const TunnelHeader &header, int dataLength, uint32_t realIp, bool reply, int id, int seq);
+	virtual bool handleEchoData(const TunnelHeader &header, int dataLength, uint32_t realIp, bool reply, uint16_t id, uint16_t seq);
 	virtual void handleTunData(int dataLength, uint32_t sourceIp, uint32_t destIp);
 	virtual void handleTimeout();
 
@@ -82,7 +82,7 @@ protected:
 
 	void serveTun(ClientData *client);
 
-	void handleUnknownClient(const TunnelHeader &header, int dataLength, uint32_t realIp);
+	void handleUnknownClient(const TunnelHeader &header, int dataLength, uint32_t realIp, uint16_t echoId);
 	void removeClient(ClientData *client);
 
 	void sendChallenge(ClientData *client);
@@ -91,7 +91,7 @@ protected:
 
 	void sendEchoToClient(ClientData *client, int type, int dataLength);
 
-	void pollReceived(ClientData *client);
+	void pollReceived(ClientData *client, uint16_t echoId);
 
 	uint32_t reserveTunnelIp();
 	void releaseTunnelIp(uint32_t tunnelIp);

@@ -45,7 +45,7 @@ int Echo::headerSize()
 	return sizeof(IpHeader) + sizeof(EchoHeader);
 }
 
-void Echo::send(int payloadLength, uint32_t realIp, bool reply, int id, int seq)
+void Echo::send(int payloadLength, uint32_t realIp, bool reply, uint16_t id, uint16_t seq)
 {
 	struct sockaddr_in target;
 	target.sin_family = AF_INET;
@@ -67,7 +67,7 @@ void Echo::send(int payloadLength, uint32_t realIp, bool reply, int id, int seq)
 		throw Exception("sendto", true);
 }
 
-int Echo::receive(uint32_t &realIp, bool &reply, int &id, int &seq)
+int Echo::receive(uint32_t &realIp, bool &reply, uint16_t &id, uint16_t &seq)
 {
 	struct sockaddr_in source;
 	int source_addr_len = sizeof(struct sockaddr_in);

@@ -21,6 +21,7 @@
 #include "server.h"
 #include "exception.h"
 #include "config.h"
+#include "utility.h"
 
 #include <string.h>
 #include <arpa/inet.h>
@@ -35,6 +36,7 @@ Client::Client(int tunnelMtu, const char *deviceName, uint32_t serverIp, int max
 {
 	this->serverIp = serverIp;
 	this->maxPolls = maxPolls;
+	this->nextEchoId = Utility::rand();
 
 	state = STATE_CLOSED;
 }
@@ -78,7 +80,7 @@ void Client::sendChallengeResponse(int dataLength)
 	setTimeout(5000);
 }
 
-bool Client::handleEchoData(const TunnelHeader &header, int dataLength, uint32_t realIp, bool reply, int id, int seq)
+bool Client::handleEchoData(const TunnelHeader &header, int dataLength, uint32_t realIp, bool reply, uint16_t id, uint16_t seq)
 {
 	if (realIp != serverIp || !reply)
 		return false;
@@ -90,6 +92,10 @@ bool Client::handleEchoData(const TunnelHeader &header, int dataLength, uint32_t
 	{
 		case TunnelHeader::TYPE_RESET_CONNECTION:
 			syslog(LOG_DEBUG, "reset reveiced");
+
+			if (privilegesDropped)
+				throw Exception("cannot reconnect without root privileges");
+
 			sendConnectionRequest();
 			return true;
 		case TunnelHeader::TYPE_SERVER_FULL:
@@ -151,7 +157,10 @@ void Client::sendEchoToServer(int type, int dataLength)
 	if (maxPolls == 0 && state == STATE_ESTABLISHED)
 		setTimeout(KEEP_ALIVE_INTERVAL);
 
-	sendEcho(magic, type, dataLength, serverIp, false, ICMP_ID, 0);
+	sendEcho(magic, type, dataLength, serverIp, false, nextEchoId, 0);
+
+	if (maxPolls > 0)
+		nextEchoId = nextEchoId + 38543; // some random prime
 }
 
 void Client::startPolling()

@@ -67,11 +67,11 @@ protected:
 		};
 	}; // size = 5
 
-	virtual bool handleEchoData(const TunnelHeader &header, int dataLength, uint32_t realIp, bool reply, int id, int seq) { return true; }
+	virtual bool handleEchoData(const TunnelHeader &header, int dataLength, uint32_t realIp, bool reply, uint16_t id, uint16_t seq) { return true; }
 	virtual void handleTunData(int dataLength, uint32_t sourceIp, uint32_t destIp) { }
 	virtual void handleTimeout() { }
 
-	void sendEcho(const TunnelHeader::Magic &magic, uint16_t pollSequence, int type, int length, uint32_t realIp, bool reply, int id, int seq);
+	void sendEcho(const TunnelHeader::Magic &magic, int type, int length, uint32_t realIp, bool reply, uint16_t id, uint16_t seq);
 	void sendToTun(int length);
 
 	void setTimeout(Time delta);
@@ -89,6 +89,8 @@ protected:
 	int maxTunnelHeaderSize;
 	uid_t uid;
 	gid_t gid;
+
+	bool privilegesDropped;
 
 	Time now;
 private:

@@ -17,8 +17,6 @@
  *  
  */
 
-#define ICMP_ID 57251
-
 #define MAX_BUFFERED_PACKETS 20
 
 #define KEEP_ALIVE_INTERVAL (60 * 1000)

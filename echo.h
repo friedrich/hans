@@ -31,8 +31,8 @@ public:
 
 	int getFd() { return fd; }
 
-	void send(int payloadLength, uint32_t realIp, bool reply, int id, int seq);
-	int receive(uint32_t &realIp, bool &reply, int &id, int &seq);
+	void send(int payloadLength, uint32_t realIp, bool reply, uint16_t id, uint16_t seq);
+	int receive(uint32_t &realIp, bool &reply, uint16_t &id, uint16_t &seq);
 
 	char *payloadBuffer() { return buffer + headerSize(); }
 

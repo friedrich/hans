@@ -49,14 +49,13 @@ Server::~Server()
 
 }
 
-void Server::handleUnknownClient(const TunnelHeader &header, int dataLength, uint32_t realIp)
+void Server::handleUnknownClient(const TunnelHeader &header, int dataLength, uint32_t realIp, uint16_t echoId)
 {
 	ClientData client;
 	client.realIp = realIp;
-	client.maxPolls = 0;
+	client.maxPolls = 1;
 
-//	if (header.type == TunnelHeader::TYPE_POLL)
-//		return;
+	pollReceived(&client, echoId);
 
 	if (header.type != TunnelHeader::TYPE_CONNECTION_REQUEST || dataLength != sizeof(ClientConnectData))
 	{
@@ -64,8 +63,6 @@ void Server::handleUnknownClient(const TunnelHeader &header, int dataLength, uin
 		sendReset(&client);
 		return;
 	}
-
-	pollReceived(&client);
 
 	ClientConnectData *connectData = (ClientConnectData *)payloadBuffer();
 
@@ -146,7 +143,7 @@ void Server::sendReset(ClientData *client)
 	sendEchoToClient(client, TunnelHeader::TYPE_RESET_CONNECTION, 0);
 }
 
-bool Server::handleEchoData(const TunnelHeader &header, int dataLength, uint32_t realIp, bool reply, int id, int seq)
+bool Server::handleEchoData(const TunnelHeader &header, int dataLength, uint32_t realIp, bool reply, uint16_t id, uint16_t seq)
 {
 	if (reply)
 		return false;
@@ -157,11 +154,11 @@ bool Server::handleEchoData(const TunnelHeader &header, int dataLength, uint32_t
 	ClientData *client = getClientByRealIp(realIp);
 	if (client == NULL)
 	{
-		handleUnknownClient(header, dataLength, realIp);
+		handleUnknownClient(header, dataLength, realIp, id);
 		return true;
 	}
 
-	pollReceived(client);
+	pollReceived(client, id);
 
 	switch (header.type)
 	{
@@ -171,6 +168,9 @@ bool Server::handleEchoData(const TunnelHeader &header, int dataLength, uint32_t
 				sendChallenge(client);
 				return true;
 			}
+
+			while (client->pollIds.size() > 1)
+				client->pollIds.pop();
 
 			syslog(LOG_DEBUG, "reconnecting %s", Utility::formatIp(realIp).c_str());
 			sendReset(client);
@@ -230,14 +230,14 @@ void Server::handleTunData(int dataLength, uint32_t sourceIp, uint32_t destIp)
 	sendEchoToClient(client, TunnelHeader::TYPE_DATA, dataLength);
 }
 
-void Server::pollReceived(ClientData *client)
+void Server::pollReceived(ClientData *client, uint16_t echoId)
 {
 	unsigned int maxSavedPolls = client->maxPolls != 0 ? client->maxPolls : 1;
 
-	client->pollTimes.push(now);
-	if (client->pollTimes.size() > maxSavedPolls)
-		client->pollTimes.pop();
-	DEBUG_ONLY(printf("poll -> %d\n", client->pollTimes.size()));
+	client->pollIds.push(echoId);
+	if (client->pollIds.size() > maxSavedPolls)
+		client->pollIds.pop();
+	DEBUG_ONLY(printf("poll (%d) -> %d\n", echoId, client->pollIds.size()));
 
 	if (client->pendingPackets.size() > 0)
 	{
@@ -256,23 +256,21 @@ void Server::sendEchoToClient(ClientData *client, int type, int dataLength)
 {
 	if (client->maxPolls == 0)
 	{
-		sendEcho(magic, type, dataLength, client->realIp, true, ICMP_ID, 0);
+		sendEcho(magic, type, dataLength, client->realIp, true, client->pollIds.front(), 0);
 		return;
 	}
 
-	while (client->pollTimes.size() != 0)
+	if (client->pollIds.size() != 0)
 	{
-		Time pollTime = client->pollTimes.front();
-		client->pollTimes.pop();
+		uint16_t id = client->pollIds.front();
+		client->pollIds.pop();
 
-		if (pollTime + POLL_INTERVAL * (client->maxPolls + 1) > now)
-		{
-			DEBUG_ONLY(printf("sending -> %d\n", client->pollTimes.size()));
-			sendEcho(magic, type, dataLength, client->realIp, true, ICMP_ID, 0);
-			return;
-		}
+		DEBUG_ONLY(printf("sending (%d) -> %d\n", id, client->pollIds.size()));
+		sendEcho(magic, type, dataLength, client->realIp, true, id, 0);
+		return;
 	}
-	DEBUG_ONLY(printf("queuing -> %d\n", client->pollTimes.size()));
+
+	DEBUG_ONLY(printf("queuing -> %d\n", client->pollIds.size()));
 
 	if (client->pendingPackets.size() == MAX_BUFFERED_PACKETS)
 	{
@@ -314,7 +312,7 @@ void Server::handleTimeout()
 uint32_t Server::reserveTunnelIp()
 {
 	uint32_t ip = network + 2;
-	
+
 	list<uint32_t>::iterator i;
 	for (i = usedIps.begin(); i != usedIps.end(); ++i)
 	{
@@ -322,10 +320,10 @@ uint32_t Server::reserveTunnelIp()
 			break;
 		ip = ip + 1;
 	}
-	
+
 	if (ip - network >= 255)
 		return 0;
-	
+
 	usedIps.insert(i, ip);
 	return ip;
 }
