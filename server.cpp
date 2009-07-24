@@ -28,7 +28,7 @@
 
 using namespace std;
 
-const Worker::TunnelHeader::Magic Server::magic("9973");
+const Worker::TunnelHeader::Magic Server::magic("hans");
 
 Server::Server(int tunnelMtu, const char *deviceName, const char *passphrase, uint32_t network, bool answerEcho, uid_t uid, gid_t gid, int pollTimeout)
 	: Worker(tunnelMtu, deviceName, answerEcho, uid, gid), auth(passphrase)

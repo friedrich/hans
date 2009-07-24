@@ -29,7 +29,7 @@
 
 using namespace std;
 
-const Worker::TunnelHeader::Magic Client::magic("9967");
+const Worker::TunnelHeader::Magic Client::magic("hanc");
 
 Client::Client(int tunnelMtu, const char *deviceName, uint32_t serverIp, int maxPolls,
 			   const char *passphrase, uid_t uid, gid_t gid, bool changeEchoId, bool changeEchoSeq)
