@@ -57,13 +57,21 @@ protected:
 			STATE_ESTABLISHED
 		};
 
+		struct EchoId
+		{
+			EchoId(uint16_t id, uint16_t seq) { this->id = id; this->seq = seq; }
+
+			uint16_t id;
+			uint16_t seq;
+		};
+
 		uint32_t realIp;
 		uint32_t tunnelIp;
 
 		std::queue<Packet> pendingPackets;
 
 		int maxPolls;
-		std::queue<uint16_t> pollIds;
+		std::queue<EchoId> pollIds;
 		Time lastActivity;
 
 		State state;
@@ -82,7 +90,7 @@ protected:
 
 	void serveTun(ClientData *client);
 
-	void handleUnknownClient(const TunnelHeader &header, int dataLength, uint32_t realIp, uint16_t echoId);
+	void handleUnknownClient(const TunnelHeader &header, int dataLength, uint32_t realIp, uint16_t echoId, uint16_t echoSeq);
 	void removeClient(ClientData *client);
 
 	void sendChallenge(ClientData *client);
@@ -91,7 +99,7 @@ protected:
 
 	void sendEchoToClient(ClientData *client, int type, int dataLength);
 
-	void pollReceived(ClientData *client, uint16_t echoId);
+	void pollReceived(ClientData *client, uint16_t echoId, uint16_t echoSeq);
 
 	uint32_t reserveTunnelIp();
 	void releaseTunnelIp(uint32_t tunnelIp);

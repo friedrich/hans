@@ -20,6 +20,7 @@
 #include "worker.h"
 #include "tun.h"
 #include "exception.h"
+#include "config.h"
 
 #include <string.h>
 #include <syslog.h>
@@ -78,16 +79,18 @@ void Worker::sendEcho(const TunnelHeader::Magic &magic, int type, int length, ui
 	if (length > payloadBufferSize())
 		throw Exception("packet too big");
 
-	TunnelHeader *header = (TunnelHeader *)echo->payloadBuffer();
+	TunnelHeader *header = (TunnelHeader *)echo->sendPayloadBuffer();
 	header->magic = magic;
 	header->type = type;
+
+	DEBUG_ONLY(printf("sending: type %d, length %d, id %d, seq %d\n", type, length, id, seq));
 
 	echo->send(length + sizeof(TunnelHeader), realIp, reply, id, seq);
 }
 
 void Worker::sendToTun(int length)
 {
-	tun->write(payloadBuffer(), length);
+	tun->write(echoReceivePayloadBuffer(), length);
 }
 
 void Worker::setTimeout(Time delta)
@@ -145,10 +148,19 @@ void Worker::run()
 				bool valid = dataLength >= sizeof(TunnelHeader);
 
 				if (valid)
-					valid = handleEchoData(*(TunnelHeader *)(echo->payloadBuffer()), dataLength - sizeof(TunnelHeader), ip, reply, id, seq);
+				{
+					TunnelHeader header = *(TunnelHeader *)echo->receivePayloadBuffer(); // make a copy!
+
+					DEBUG_ONLY(printf("received: type %d, length %d, id %d, seq %d\n", header.type, dataLength - sizeof(TunnelHeader), id, seq));
+
+					valid = handleEchoData(header, dataLength - sizeof(TunnelHeader), ip, reply, id, seq);
+				}
 
 				if (!valid && !reply && answerEcho)
+				{
+					memcpy(echo->sendPayloadBuffer(), echo->receivePayloadBuffer(), dataLength);
 					echo->send(dataLength, ip, true, id, seq);
+				}
 			}
 		}
 
@@ -157,7 +169,7 @@ void Worker::run()
 		{
 			uint32_t sourceIp, destIp;
 
-			int dataLength = tun->read(payloadBuffer(), sourceIp, destIp);
+			int dataLength = tun->read(echoSendPayloadBuffer(), sourceIp, destIp);
 
 			if (dataLength == 0)
 				throw Exception("tunnel closed");

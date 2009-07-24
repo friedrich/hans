@@ -43,20 +43,17 @@ void usage()
 		"  -c server     Connect to a server.\n"
 		"  -f            Run in foreground.\n"
 		"  -r            Respond to ordinary pings. Only in server mode.\n"
-		"                Use this when you disable echo replies of your operating system, which is a good idea.\n"
 		"  -p password   Use a password.\n"
 		"  -u username   Set the user under which the program should run.\n"
 		"  -d device     Use the given tun device.\n"
 		"  -m mtu        Use this mtu to calculate the tunnel mtu.\n"
 		"                The generated ICMP packets will not be bigger than this value.\n"
-		"                Has to be the same on client and server.\n"
-		"                In most cases you don't want to set this. Defaults to 1500.\n"
+		"                Has to be the same on client and server. Defaults to 1500.\n"
 		"  -w polls      Number of echo requests the client sends to the server for polling.\n"
-		"                If your network allows unlimited echo replies set this to 0 to disable polling.\n"
-		"                The default value of 10 is regarded as pretty high.\n"
-		"                Set this to a lower value if you experience packet loss through the tunnel.\n"
-		"                Set this to 1 in extreme cases, when your network allows only one echo reply per request.\n"
-		"                A low value will decrease the performance of the tunnel.\n");
+		"                0 disables polling. Defaults to 10.\n"
+		"  -i            Change the echo id for every packet.\n"
+		"  -q            Change the echo sequence number for every packet.\n"
+	);
 }
 
 int main(int argc, char *argv[])
@@ -74,11 +71,13 @@ int main(int argc, char *argv[])
 	bool answerPing = false;
 	uid_t uid = 0;
 	gid_t gid = 0;
-
+	bool changeEchoId = false;
+	bool changeEchoSeq = false;
+	
 	openlog(argv[0], LOG_PERROR, LOG_DAEMON);
 
 	int c;
-	while ((c = getopt(argc, argv, "fru:d:p:s:c:m:w:")) != -1)
+	while ((c = getopt(argc, argv, "fru:d:p:s:c:m:w:qi")) != -1)
 	{
 		switch(c) {
 			case 'f':
@@ -101,6 +100,8 @@ int main(int argc, char *argv[])
 			case 's':
 				isServer = true;
 				network = ntohl(inet_addr(optarg));
+				if (network == INADDR_NONE)
+					printf("invalid network\n");
 				break;
 			case 'm':
 				mtu = atoi(optarg);
@@ -110,6 +111,12 @@ int main(int argc, char *argv[])
 				break;
 			case 'r':
 				answerPing = true;
+				break;
+			case 'q':
+				changeEchoSeq = true;
+				break;
+			case 'i':
+				changeEchoId = true;
 				break;
 			default:
 				usage();
@@ -128,7 +135,8 @@ int main(int argc, char *argv[])
 
 	if ((isClient == isServer) ||
 		(isServer && network == INADDR_NONE) ||
-		(maxPolls < 0 || maxPolls > 255))
+		(maxPolls < 0 || maxPolls > 255) ||
+		(isServer && (changeEchoSeq || changeEchoId)))
 	{
 		usage();
 		return 1;
@@ -173,7 +181,7 @@ int main(int argc, char *argv[])
 				serverIp = *(uint32_t *)he->h_addr;
 			}
 
-			worker = new Client(mtu, device, ntohl(serverIp), maxPolls, password, uid, gid);
+			worker = new Client(mtu, device, ntohl(serverIp), maxPolls, password, uid, gid, changeEchoId, changeEchoSeq);
 		}
 
 		if (!foreground)

@@ -34,7 +34,8 @@ public:
 	void send(int payloadLength, uint32_t realIp, bool reply, uint16_t id, uint16_t seq);
 	int receive(uint32_t &realIp, bool &reply, uint16_t &id, uint16_t &seq);
 
-	char *payloadBuffer() { return buffer + headerSize(); }
+	char *sendPayloadBuffer() { return sendBuffer + headerSize(); }
+	char *receivePayloadBuffer() { return receiveBuffer + headerSize(); }
 
 	static int headerSize();
 protected:
@@ -51,7 +52,7 @@ protected:
 
 	int fd;
 	int bufferSize;
-	char *buffer;
+	char *sendBuffer, *receiveBuffer;
 };
 
 #endif

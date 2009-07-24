@@ -31,12 +31,16 @@ using namespace std;
 
 const Worker::TunnelHeader::Magic Client::magic("9967");
 
-Client::Client(int tunnelMtu, const char *deviceName, uint32_t serverIp, int maxPolls, const char *passphrase, uid_t uid, gid_t gid)
+Client::Client(int tunnelMtu, const char *deviceName, uint32_t serverIp, int maxPolls,
+			   const char *passphrase, uid_t uid, gid_t gid, bool changeEchoId, bool changeEchoSeq)
 	: Worker(tunnelMtu, deviceName, false, uid, gid), auth(passphrase)
 {
 	this->serverIp = serverIp;
 	this->maxPolls = maxPolls;
 	this->nextEchoId = Utility::rand();
+	this->changeEchoId = changeEchoId;
+	this->changeEchoSeq = changeEchoSeq;
+	this->nextEchoSequence = Utility::rand();
 
 	state = STATE_CLOSED;
 }
@@ -48,7 +52,7 @@ Client::~Client()
 
 void Client::sendConnectionRequest()
 {
-	Server::ClientConnectData *connectData = (Server::ClientConnectData *)payloadBuffer();
+	Server::ClientConnectData *connectData = (Server::ClientConnectData *)echoSendPayloadBuffer();
 	connectData->maxPolls = maxPolls;
 
 	syslog(LOG_DEBUG, "sending connection request");
@@ -70,11 +74,11 @@ void Client::sendChallengeResponse(int dataLength)
 
 	vector<char> challenge;
 	challenge.resize(dataLength);
-	memcpy(&challenge[0], payloadBuffer(), dataLength);
+	memcpy(&challenge[0], echoReceivePayloadBuffer(), dataLength);
 
 	Auth::Response response = auth.getResponse(challenge);
 
-	memcpy(payloadBuffer(), (char *)&response, sizeof(Auth::Response));
+	memcpy(echoSendPayloadBuffer(), (char *)&response, sizeof(Auth::Response));
 	sendEchoToServer(TunnelHeader::TYPE_CHALLENGE_RESPONSE, sizeof(Auth::Response));
 
 	setTimeout(5000);
@@ -123,7 +127,7 @@ bool Client::handleEchoData(const TunnelHeader &header, int dataLength, uint32_t
 
 				syslog(LOG_INFO, "connection established");
 
-				tun->setIp(ntohl(*(uint32_t *)payloadBuffer()));
+				tun->setIp(ntohl(*(uint32_t *)echoReceivePayloadBuffer()));
 				state = STATE_ESTABLISHED;
 
 				dropPrivileges();
@@ -157,10 +161,12 @@ void Client::sendEchoToServer(int type, int dataLength)
 	if (maxPolls == 0 && state == STATE_ESTABLISHED)
 		setTimeout(KEEP_ALIVE_INTERVAL);
 
-	sendEcho(magic, type, dataLength, serverIp, false, nextEchoId, 0);
+	sendEcho(magic, type, dataLength, serverIp, false, nextEchoId, nextEchoSequence);
 
-	if (maxPolls > 0)
+	if (changeEchoId)
 		nextEchoId = nextEchoId + 38543; // some random prime
+	if (changeEchoSeq)
+		nextEchoSequence = nextEchoSequence + 38543; // some random prime
 }
 
 void Client::startPolling()
@@ -179,6 +185,12 @@ void Client::startPolling()
 
 void Client::handleDataFromServer(int dataLength)
 {
+	if (dataLength == 0)
+	{
+		syslog(LOG_WARNING, "received empty data packet");
+		return;
+	}
+
 	sendToTun(dataLength);
 
 	if (maxPolls != 0)

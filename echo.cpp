@@ -31,13 +31,16 @@ Echo::Echo(int maxPayloadSize)
 		throw Exception("creating icmp socket", true);
 
 	bufferSize = maxPayloadSize + headerSize();
-	buffer = new char[bufferSize];
+	sendBuffer = new char[bufferSize];
+	receiveBuffer = new char[bufferSize];
 }
 
 Echo::~Echo()
 {
 	close(fd);
-	delete[] buffer;
+
+	delete[] sendBuffer;
+	delete[] receiveBuffer;
 }
 
 int Echo::headerSize()
@@ -54,15 +57,15 @@ void Echo::send(int payloadLength, uint32_t realIp, bool reply, uint16_t id, uin
 	if (payloadLength + sizeof(IpHeader) + sizeof(EchoHeader) > bufferSize)
 		throw Exception("packet too big");
 
-	EchoHeader *header = (EchoHeader *)(buffer + sizeof(IpHeader));
+	EchoHeader *header = (EchoHeader *)(sendBuffer + sizeof(IpHeader));
 	header->type = reply ? 0: 8;
 	header->code = 0;
 	header->id = htons(id);
 	header->seq = htons(seq);
 	header->chksum = 0;
-	header->chksum = icmpChecksum(buffer + sizeof(IpHeader), payloadLength + sizeof(EchoHeader));
+	header->chksum = icmpChecksum(sendBuffer + sizeof(IpHeader), payloadLength + sizeof(EchoHeader));
 
-	int result = sendto(fd, buffer + sizeof(IpHeader), payloadLength + sizeof(EchoHeader), 0, (struct sockaddr *)&target, sizeof(struct sockaddr_in));
+	int result = sendto(fd, sendBuffer + sizeof(IpHeader), payloadLength + sizeof(EchoHeader), 0, (struct sockaddr *)&target, sizeof(struct sockaddr_in));
 	if (result == -1)
 		throw Exception("sendto", true);
 }
@@ -72,14 +75,14 @@ int Echo::receive(uint32_t &realIp, bool &reply, uint16_t &id, uint16_t &seq)
 	struct sockaddr_in source;
 	int source_addr_len = sizeof(struct sockaddr_in);
 
-	int dataLength = recvfrom(fd, buffer, bufferSize, 0, (struct sockaddr *)&source, (socklen_t *)&source_addr_len);
+	int dataLength = recvfrom(fd, receiveBuffer, bufferSize, 0, (struct sockaddr *)&source, (socklen_t *)&source_addr_len);
 	if (dataLength == -1)
 		throw Exception("recvfrom", true);
 
 	if (dataLength < sizeof(IpHeader) + sizeof(EchoHeader))
 		return -1;
 
-	EchoHeader *header = (EchoHeader *)(buffer + sizeof(IpHeader));
+	EchoHeader *header = (EchoHeader *)(receiveBuffer + sizeof(IpHeader));
 	if ((header->type != 0 && header->type != 8) || header->code != 0)
 		return -1;
 
