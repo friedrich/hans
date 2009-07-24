@@ -33,7 +33,7 @@
 void usage()
 {
 	printf(
-		"Hans - IP over ICMP version 0.1 dev\n\n"
+		"Hans - IP over ICMP version 0.1\n\n"
 		"RUN AS SERVER\n"
 		"  hans -s network [-fr] [-p password] [-u unprivileged_user] [-d tun_device] [-m reference_mtu]\n\n"
 		"RUN AS CLIENT\n"
@@ -47,12 +47,12 @@ void usage()
 		"  -u username   Set the user under which the program should run.\n"
 		"  -d device     Use the given tun device.\n"
 		"  -m mtu        Use this mtu to calculate the tunnel mtu.\n"
-		"                The generated ICMP packets will not be bigger than this value.\n"
+		"                The generated echo packets will not be bigger than this value.\n"
 		"                Has to be the same on client and server. Defaults to 1500.\n"
 		"  -w polls      Number of echo requests the client sends to the server for polling.\n"
 		"                0 disables polling. Defaults to 10.\n"
-		"  -i            Change the echo id for every packet.\n"
-		"  -q            Change the echo sequence number for every packet.\n"
+		"  -i            Change the echo id for every echo request.\n"
+		"  -q            Change the echo sequence number for every echo request.\n"
 	);
 }
 
