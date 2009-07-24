@@ -151,7 +151,7 @@ bool Client::handleEchoData(const TunnelHeader &header, int dataLength, uint32_t
 			break;
 	}
 
-	syslog(LOG_DEBUG, "invalid packet type: %d, state:\n", header.type, state);
+	syslog(LOG_DEBUG, "invalid packet type: %d, state: %d", header.type, state);
 
 	return true;
 }

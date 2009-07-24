@@ -198,7 +198,7 @@ bool Server::handleEchoData(const TunnelHeader &header, int dataLength, uint32_t
 			return true;
 	}
 
-	syslog(LOG_DEBUG, "invalid packet from: %s, type: %d, state:\n", Utility::formatIp(realIp).c_str(), header.type, client->state);
+	syslog(LOG_DEBUG, "invalid packet from: %s, type: %d, state: %d", Utility::formatIp(realIp).c_str(), header.type, client->state);
 
 	return true;
 }
