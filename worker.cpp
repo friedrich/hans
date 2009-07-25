@@ -149,11 +149,11 @@ void Worker::run()
 
 				if (valid)
 				{
-					TunnelHeader header = *(TunnelHeader *)echo->receivePayloadBuffer(); // make a copy!
+					TunnelHeader *header = (TunnelHeader *)echo->receivePayloadBuffer();
 
-					DEBUG_ONLY(printf("received: type %d, length %d, id %d, seq %d\n", header.type, dataLength - sizeof(TunnelHeader), id, seq));
+					DEBUG_ONLY(printf("received: type %d, length %d, id %d, seq %d\n", header->type, dataLength - sizeof(TunnelHeader), id, seq));
 
-					valid = handleEchoData(header, dataLength - sizeof(TunnelHeader), ip, reply, id, seq);
+					valid = handleEchoData(*header, dataLength - sizeof(TunnelHeader), ip, reply, id, seq);
 				}
 
 				if (!valid && !reply && answerEcho)
