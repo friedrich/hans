@@ -1,27 +1,6 @@
-OS = $(shell uname | tr "a-z" "A-Z")
-
-LDFLAGS =
-CFLAGS = -c -g -D$(OS) $(OS_CFLAGS)
-
-ifeq ($(OS), LINUX)
-TUN_DEV_FILE = tun_dev_linux.c
-OS_CFLAGS = -DHAVE_LINUX_IF_TUN_H
-else
-
-ifeq ($(OS), OPENBSD)
-TUN_DEV_FILE = tun_dev_openbsd.c
-else
-
-ifeq ($(OS), FREEBSD)
-TUN_DEV_FILE = tun_dev_freebsd.c
-else
-
-TUN_DEV_FILE = tun_dev_generic.c
-
-endif
-endif
-endif
-
+LDFLAGS = `sh osflags ld`
+CFLAGS = -c -g `sh osflags c`
+TUN_DEV_FILE = `sh osflags dev`
 
 all: hans
 
@@ -40,7 +19,7 @@ echo.o: echo.cpp echo.h exception.h
 tun.o: tun.cpp tun.h exception.h utility.h tun_dev.h
 	g++ -c tun.cpp $(CFLAGS)
 
-tun_dev.o: $(TUN_DEV_FILE)
+tun_dev.o:
 	gcc -c $(TUN_DEV_FILE) -o tun_dev.o $(CFLAGS)
 
 sha1.o: sha1.cpp sha1.h
@@ -66,3 +45,4 @@ time.o: time.cpp time.h
 
 clean:
 	rm -f tun.o sha1.o main.o client.o server.o auth.o worker.o time.o tun_dev.o echo.o exception.o utility.o hans
+

@@ -1,0 +1,37 @@
+#!/bin/sh
+
+OS=`uname | tr "a-z" "A-Z"`
+
+case $1 in
+ld)
+	;;
+c)
+	FLAGS=-D$OS
+
+	case $OS in
+		LINUX)
+			echo $FLAGS -DDHAVE_LINUX_IF_TUN_H
+		;;
+		*)
+			echo $FLAGS
+		;;
+	esac
+	;;
+dev)
+	case $OS in
+		LINUX)
+			echo tun_dev_linux.c
+		;;
+		FREEBSD)
+			echo tun_dev_freebsd.c
+		;;
+		OPENBSD)
+			echo tun_dev_openbsd.c
+		;;
+		*)
+			echo tun_dev_generic.c
+		;;
+	esac
+	;;
+esac
+

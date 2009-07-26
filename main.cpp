@@ -23,6 +23,7 @@
 
 #include <stdio.h>
 #include <arpa/inet.h>
+#include <netinet/in.h>
 #include <pwd.h>
 #include <netdb.h>
 #include <string.h>
