@@ -24,6 +24,7 @@
 
 #include <string.h>
 #include <syslog.h>
+#include <unistd.h>
 
 using namespace std;
 
