@@ -10,7 +10,7 @@ c)
 
 	case $OS in
 		LINUX)
-			echo $FLAGS -DDHAVE_LINUX_IF_TUN_H
+			echo $FLAGS -DHAVE_LINUX_IF_TUN_H
 		;;
 		*)
 			echo $FLAGS
