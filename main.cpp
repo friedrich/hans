@@ -43,6 +43,7 @@ void usage()
 		"  -s network    Run as a server with the given network address for the virtual interface.\n"
 		"  -c server     Connect to a server.\n"
 		"  -f            Run in foreground.\n"
+		"  -v            Print debug information.\n"
 		"  -r            Respond to ordinary pings. Only in server mode.\n"
 		"  -p password   Use a password.\n"
 		"  -u username   Set the user under which the program should run.\n"
@@ -74,11 +75,12 @@ int main(int argc, char *argv[])
 	gid_t gid = 0;
 	bool changeEchoId = false;
 	bool changeEchoSeq = false;
+	bool verbose = false;
 	
 	openlog(argv[0], LOG_PERROR, LOG_DAEMON);
 
 	int c;
-	while ((c = getopt(argc, argv, "fru:d:p:s:c:m:w:qi")) != -1)
+	while ((c = getopt(argc, argv, "fru:d:p:s:c:m:w:qiv")) != -1)
 	{
 		switch(c) {
 			case 'f':
@@ -119,6 +121,9 @@ int main(int argc, char *argv[])
 			case 'i':
 				changeEchoId = true;
 				break;
+			case 'v':
+				verbose = true;
+				break;
 			default:
 				usage();
 				return 1;
@@ -158,6 +163,9 @@ int main(int argc, char *argv[])
 			return 1;
 		}
 	}
+
+	if (!verbose)
+		setlogmask(LOG_UPTO(LOG_INFO));
 
 	try
 	{
