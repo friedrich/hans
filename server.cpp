@@ -223,6 +223,9 @@ Server::ClientData *Server::getClientByRealIp(uint32_t ip)
 
 void Server::handleTunData(int dataLength, uint32_t sourceIp, uint32_t destIp)
 {
+	if (destIp == network + 255) // ignore broadcasts
+		return;
+
 	ClientData *client = getClientByTunnelIp(destIp);
 
 	if (client == NULL)
