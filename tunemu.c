@@ -264,21 +264,42 @@ static void allocate_data_buffer(int size)
 	}
 }
 
+static void make_device_name(tunemu_device device, int unit_number)
+{
+	snprintf(device, sizeof(tunemu_device), "ppp%d", unit_number);
+}
+
+static int check_device_name(tunemu_device device)
+{
+	if (strlen(device) < 4)
+		return -1;
+
+	int unit_number = atoi(device + 3);
+	if (unit_number < 0 || unit_number > 999)
+		return -1;
+
+	tunemu_device compare;
+	make_device_name(compare, unit_number);
+
+	if (strcmp(device, compare) != 0)
+		return -1;
+
+	return 0;
+}
+
 int tunemu_open(tunemu_device device)
 {
 	int ppp_unit_number = -1;
-	char *c = device;
-	while (*c)
+	if (device[0] != 0)
 	{
-		if (isdigit(*c))
+		if (check_device_name(device) < 0)
 		{
-			ppp_unit_number = atoi(c);
-			break;
+			tun_error("invalid device name \"%s\"", device);
+			return -1;
 		}
-		c++;
+
+		ppp_unit_number = atoi(device + 3);
 	}
-	if (ppp_unit_number > 999)
-		ppp_unit_number = -1;
 
 	int ppp_unit_fd = ppp_new_unit(&ppp_unit_number);
 	if (ppp_unit_fd < 0)
@@ -296,7 +317,7 @@ int tunemu_open(tunemu_device device)
 		return -1;
 	}
 
-	snprintf(device, sizeof(tunemu_device), "ppp%d", ppp_unit_number);
+	make_device_name(device, ppp_unit_number);
 
 	return ppp_unit_fd;
 }
