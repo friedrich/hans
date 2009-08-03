@@ -1,6 +1,6 @@
-LDFLAGS = `sh osflags ld`
-CFLAGS = -c -g `sh osflags c`
-TUN_DEV_FILE = `sh osflags dev`
+LDFLAGS = `sh osflags ld $(MODE)`
+CFLAGS = -c -g `sh osflags c $(MODE)`
+TUN_DEV_FILE = `sh osflags dev $(MODE)`
 
 all: hans
 
@@ -44,5 +44,8 @@ time.o: time.cpp time.h
 	g++ -c time.cpp $(CFLAGS)
 
 clean:
-	rm -f tun.o sha1.o main.o client.o server.o auth.o worker.o time.o tun_dev.o echo.o exception.o utility.o hans
+	rm -f tun.o sha1.o main.o client.o server.o auth.o worker.o time.o tun_dev.o echo.o exception.o utility.o tunemu.o hans
 
+
+tunemu.o: tunemu.h tunemu.c
+	gcc -c tunemu.c -o tunemu.o
