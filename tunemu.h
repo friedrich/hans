@@ -17,16 +17,16 @@
  *  
  */
 
-#ifndef TUN_EMU_H
-#define TUN_EMU_H
+#ifndef TUNEMU_H
+#define TUNEMU_H
 
-typedef char tun_emu_device[7];
+typedef char tunemu_device[7];
 
-extern char tun_emu_error[];
+extern char tunemu_error[];
 
-int tun_emu_open(tun_emu_device dev);
-int tun_emu_close(int fd);
-int tun_emu_read(int fd, char *buffer, int length);
-int tun_emu_write(int fd, char *buffer, int length);
+int tunemu_open(tunemu_device dev);
+int tunemu_close(int fd);
+int tunemu_read(int fd, char *buffer, int length);
+int tunemu_write(int fd, char *buffer, int length);
 
 #endif

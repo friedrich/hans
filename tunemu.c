@@ -70,7 +70,7 @@ struct npioctl
 
 #define ERROR_BUFFER_SIZE 1024
 
-char tun_emu_error[ERROR_BUFFER_SIZE];
+char tunemu_error[ERROR_BUFFER_SIZE];
 
 static int pcap_use_count = 0;
 static pcap_t *pcap = NULL;
@@ -82,13 +82,13 @@ static void tun_error(char *format, ...)
 {
 	va_list vl;
 	va_start(vl, format);
-	vsnprintf(tun_emu_error, ERROR_BUFFER_SIZE, format, vl);
+	vsnprintf(tunemu_error, ERROR_BUFFER_SIZE, format, vl);
 	va_end(vl);
 }
 
 static void tun_noerror()
 {
-	*tun_emu_error = 0;
+	*tunemu_error = 0;
 }
 
 static int ppp_new_instance()
@@ -205,7 +205,7 @@ static void allocate_data_buffer(int size)
 	}
 }
 
-int tun_emu_open(tun_emu_device device)
+int tunemu_open(tunemu_device device)
 {
 	int ppp_unit_number = -1;
 	int ppp_unit_fd = ppp_new_unit(&ppp_unit_number);
@@ -229,7 +229,7 @@ int tun_emu_open(tun_emu_device device)
 	return ppp_unit_fd;
 }
 
-int tun_emu_close(int ppp_sockfd)
+int tunemu_close(int ppp_sockfd)
 {
 	int ret = close(ppp_sockfd);
 
@@ -239,7 +239,7 @@ int tun_emu_close(int ppp_sockfd)
 	return ret;
 }
 
-int tun_emu_read(int ppp_sockfd, char *buffer, int length)
+int tunemu_read(int ppp_sockfd, char *buffer, int length)
 {
 	allocate_data_buffer(length + 2);
 
@@ -260,7 +260,7 @@ int tun_emu_read(int ppp_sockfd, char *buffer, int length)
 	return length;
 }
 
-int tun_emu_write(int ppp_sockfd, char *buffer, int length)
+int tunemu_write(int ppp_sockfd, char *buffer, int length)
 {
 	allocate_data_buffer(length + 4);
 
