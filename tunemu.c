@@ -30,6 +30,9 @@
 #include <stdarg.h>
 #include <errno.h>
 #include <stdint.h>
+#include <stdint.h>
+#include <ctype.h>
+#include <fcntl.h>
 
 #define PPPPROTO_CTL 1
 
@@ -68,6 +71,8 @@ struct npioctl
 	enum NPmode mode;
 };
 
+#define PPP_KEXT_PATH "/System/Library/Extensions/PPP.kext"
+
 #define ERROR_BUFFER_SIZE 1024
 
 char tunemu_error[ERROR_BUFFER_SIZE];
@@ -91,14 +96,68 @@ static void tun_noerror()
 	*tunemu_error = 0;
 }
 
+static void closeall()
+{
+    int fd = getdtablesize();
+	while (fd--)
+		close(fd);
+
+    open("/dev/null", O_RDWR, 0);
+    dup(0);
+    dup(0);
+}
+
+static int ppp_load_kext()
+{
+	int pid = fork();
+	if (pid < 0)
+	{
+		tun_error("fork for ppp kext: %s", strerror(errno));
+		return -1;
+	}
+
+	if (pid == 0)
+	{
+		closeall();
+		execle("/sbin/kextload", "kextload", PPP_KEXT_PATH, NULL, NULL);
+		exit(1);
+	}
+
+	int status;
+	while (waitpid(pid, &status, 0) < 0)
+	{
+		if (errno == EINTR)
+			continue;
+
+		tun_error("waitpid for ppp kext: %s", strerror(errno));
+		return -1;
+	}
+
+	if (WEXITSTATUS(status) != 0)
+	{
+		tun_error("could not load ppp kext \"%s\"", PPP_KEXT_PATH);
+		return -1;
+	}
+
+	tun_noerror();
+	return 0;
+}
+
 static int ppp_new_instance()
 {
 	// create ppp socket
     int ppp_sockfd = socket(PF_PPP, SOCK_RAW, PPPPROTO_CTL);
     if (ppp_sockfd < 0)
 	{
-		tun_error("creating ppp socket: %s", strerror(errno));
-		return -1;
+		if (ppp_load_kext() < 0)
+			return -1;
+
+		ppp_sockfd = socket(PF_PPP, SOCK_RAW, PPPPROTO_CTL);
+		if (ppp_sockfd < 0)
+		{
+			tun_error("creating ppp socket: %s", strerror(errno));
+			return -1;
+		}
 	}
 
 	// connect to ppp procotol
@@ -199,8 +258,8 @@ static void allocate_data_buffer(int size)
 {
 	if (data_buffer_length < size)
 	{
-		data_buffer_length = size;
 		free(data_buffer);
+		data_buffer_length = size;
 		data_buffer = malloc(data_buffer_length);
 	}
 }
@@ -208,6 +267,19 @@ static void allocate_data_buffer(int size)
 int tunemu_open(tunemu_device device)
 {
 	int ppp_unit_number = -1;
+	char *c = device;
+	while (*c)
+	{
+		if (isdigit(*c))
+		{
+			ppp_unit_number = atoi(c);
+			break;
+		}
+		c++;
+	}
+	if (ppp_unit_number > 999)
+		ppp_unit_number = -1;
+
 	int ppp_unit_fd = ppp_new_unit(&ppp_unit_number);
 	if (ppp_unit_fd < 0)
 		return -1;
@@ -224,7 +296,7 @@ int tunemu_open(tunemu_device device)
 		return -1;
 	}
 
-	snprintf(device, 7, "ppp%d", ppp_unit_number);
+	snprintf(device, sizeof(tunemu_device), "ppp%d", ppp_unit_number);
 
 	return ppp_unit_fd;
 }
@@ -271,9 +343,19 @@ int tunemu_write(int ppp_sockfd, char *buffer, int length)
 
 	memcpy(data_buffer + 4, buffer, length);
 
+	if (pcap == NULL)
+	{
+		tun_error("pcap not open");
+		return -1;
+	}
+
 	length = pcap_inject(pcap, data_buffer, length + 4);
 	if (length < 0)
+	{
 		tun_error("injecting packet: %s", pcap_geterr(pcap));
+		return length;
+	}
+	tun_noerror();
 
 	length -= 4;
 	if (length < 0)
