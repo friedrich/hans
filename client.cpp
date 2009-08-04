@@ -127,7 +127,8 @@ bool Client::handleEchoData(const TunnelHeader &header, int dataLength, uint32_t
 
 				syslog(LOG_INFO, "connection established");
 
-				tun->setIp(ntohl(*(uint32_t *)echoReceivePayloadBuffer()));
+				uint32_t ip = ntohl(*(uint32_t *)echoReceivePayloadBuffer());
+				tun->setIp(ip, (ip & 0xffffff00) + 1, false);
 				state = STATE_ESTABLISHED;
 
 				dropPrivileges();

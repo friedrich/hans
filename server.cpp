@@ -36,7 +36,7 @@ Server::Server(int tunnelMtu, const char *deviceName, const char *passphrase, ui
 	this->network = network & 0xffffff00;
 	this->pollTimeout = pollTimeout;
 
-	tun->setIp(this->network + 1);
+	tun->setIp(this->network + 1, this->network + 2, true);
 
 	dropPrivileges();
 }

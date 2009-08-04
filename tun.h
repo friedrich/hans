@@ -38,7 +38,7 @@ public:
 
 	void write(const char *buffer, int length);
 
-	void setIp(uint32_t ip);
+	void setIp(uint32_t ip, uint32_t destIp, bool includeSubnet);
 protected:
 	char device[VTUN_DEV_LEN];
 

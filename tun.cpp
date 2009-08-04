@@ -61,19 +61,24 @@ Tun::~Tun()
 	tun_close(fd, device);
 }
 
-void Tun::setIp(uint32_t ip)
+void Tun::setIp(uint32_t ip, uint32_t destIp, bool includeSubnet)
 {
 	char cmdline[512];
 	string ips = Utility::formatIp(ip);
+	string destIps = Utility::formatIp(destIp);
 
-	snprintf(cmdline, sizeof(cmdline), "/sbin/ifconfig %s %s %s netmask 255.255.255.0", device, ips.c_str(), ips.c_str());
+	snprintf(cmdline, sizeof(cmdline), "/sbin/ifconfig %s %s %s netmask 255.255.255.255", device, ips.c_str(), destIps.c_str());
+
 	if (system(cmdline) != 0)
 		syslog(LOG_ERR, "could not set tun device ip address");
 
 #ifndef LINUX
-	snprintf(cmdline, sizeof(cmdline), "/sbin/route add %s/24 %s", ips.c_str(), ips.c_str());
-	if (system(cmdline) != 0)
-		syslog(LOG_ERR, "could not add route");
+	if (includeSubnet)
+	{
+		snprintf(cmdline, sizeof(cmdline), "/sbin/route add %s/24 %s", destIps.c_str(), destIps.c_str());
+		if (system(cmdline) != 0)
+			syslog(LOG_ERR, "could not add route");
+	}
 #endif
 }
 
