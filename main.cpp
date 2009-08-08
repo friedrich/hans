@@ -36,9 +36,9 @@ void usage()
 	printf(
 		"Hans - IP over ICMP version 0.3\n\n"
 		"RUN AS SERVER\n"
-		"  hans -s network [-fr] [-p password] [-u unprivileged_user] [-d tun_device] [-m reference_mtu]\n\n"
+		"  hans -s network [-fvr] [-p password] [-u unprivileged_user] [-d tun_device] [-m reference_mtu]\n\n"
 		"RUN AS CLIENT\n"
-		"  hans -c server  [-f]  [-p password] [-u unprivileged_user] [-d tun_device] [-m reference_mtu] [-w polls]\n\n"
+		"  hans -c server  [-fv]  [-p password] [-u unprivileged_user] [-d tun_device] [-m reference_mtu] [-w polls]\n\n"
 		"ARGUMENTS\n"
 		"  -s network    Run as a server with the given network address for the virtual interface.\n"
 		"  -c server     Connect to a server.\n"
