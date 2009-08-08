@@ -67,7 +67,11 @@ void Tun::setIp(uint32_t ip, uint32_t destIp, bool includeSubnet)
 	string ips = Utility::formatIp(ip);
 	string destIps = Utility::formatIp(destIp);
 
+#ifdef LINUX
+	snprintf(cmdline, sizeof(cmdline), "/sbin/ifconfig %s %s netmask 255.255.255.0", device, ips.c_str());
+#else
 	snprintf(cmdline, sizeof(cmdline), "/sbin/ifconfig %s %s %s netmask 255.255.255.255", device, ips.c_str(), destIps.c_str());
+#endif
 
 	if (system(cmdline) != 0)
 		syslog(LOG_ERR, "could not set tun device ip address");
