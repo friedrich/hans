@@ -34,7 +34,7 @@
 void usage()
 {
 	printf(
-		"Hans - IP over ICMP version 0.3.1\n\n"
+		"Hans - IP over ICMP version 0.4\n\n"
 		"RUN AS SERVER\n"
 		"  hans -s network [-fvr] [-p password] [-u unprivileged_user] [-d tun_device] [-m reference_mtu] [-a ip]\n\n"
 		"RUN AS CLIENT\n"
