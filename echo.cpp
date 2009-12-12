@@ -26,6 +26,9 @@
 #include <netinet/ip.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <errno.h>
+#include <syslog.h>
+#include <string.h>
 
 typedef ip IpHeader;
 
@@ -72,7 +75,7 @@ void Echo::send(int payloadLength, uint32_t realIp, bool reply, uint16_t id, uin
 
 	int result = sendto(fd, sendBuffer + sizeof(IpHeader), payloadLength + sizeof(EchoHeader), 0, (struct sockaddr *)&target, sizeof(struct sockaddr_in));
 	if (result == -1)
-		throw Exception("sendto", true);
+        syslog(LOG_ERR, "error sending icmp packet: %s", strerror(errno));
 }
 
 int Echo::receive(uint32_t &realIp, bool &reply, uint16_t &id, uint16_t &seq)
@@ -82,7 +85,10 @@ int Echo::receive(uint32_t &realIp, bool &reply, uint16_t &id, uint16_t &seq)
 
 	int dataLength = recvfrom(fd, receiveBuffer, bufferSize, 0, (struct sockaddr *)&source, (socklen_t *)&source_addr_len);
 	if (dataLength == -1)
-		throw Exception("recvfrom", true);
+    {
+        syslog(LOG_ERR, "error receiving icmp packet: %s", strerror(errno));
+        return -1;
+    }
 
 	if (dataLength < sizeof(IpHeader) + sizeof(EchoHeader))
 		return -1;

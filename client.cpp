@@ -31,11 +31,14 @@ using namespace std;
 
 const Worker::TunnelHeader::Magic Client::magic("hanc");
 
-Client::Client(int tunnelMtu, const char *deviceName, uint32_t serverIp, int maxPolls,
-			   const char *passphrase, uid_t uid, gid_t gid, bool changeEchoId, bool changeEchoSeq)
-	: Worker(tunnelMtu, deviceName, false, uid, gid), auth(passphrase)
+Client::Client(int tunnelMtu, const char *deviceName, uint32_t serverIp,
+               int maxPolls, const char *passphrase, uid_t uid, gid_t gid,
+               bool changeEchoId, bool changeEchoSeq, uint32_t desiredIp)
+: Worker(tunnelMtu, deviceName, false, uid, gid), auth(passphrase)
 {
 	this->serverIp = serverIp;
+    this->clientIp = INADDR_NONE;
+    this->desiredIp = desiredIp;
 	this->maxPolls = maxPolls;
 	this->nextEchoId = Utility::rand();
 	this->changeEchoId = changeEchoId;
@@ -47,13 +50,14 @@ Client::Client(int tunnelMtu, const char *deviceName, uint32_t serverIp, int max
 
 Client::~Client()
 {
-	
+
 }
 
 void Client::sendConnectionRequest()
 {
 	Server::ClientConnectData *connectData = (Server::ClientConnectData *)echoSendPayloadBuffer();
 	connectData->maxPolls = maxPolls;
+    connectData->desiredIp = desiredIp;
 
 	syslog(LOG_DEBUG, "sending connection request");
 
@@ -97,9 +101,6 @@ bool Client::handleEchoData(const TunnelHeader &header, int dataLength, uint32_t
 		case TunnelHeader::TYPE_RESET_CONNECTION:
 			syslog(LOG_DEBUG, "reset reveiced");
 
-			if (privilegesDropped)
-				throw Exception("cannot reconnect without root privileges");
-
 			sendConnectionRequest();
 			return true;
 		case TunnelHeader::TYPE_SERVER_FULL:
@@ -128,7 +129,15 @@ bool Client::handleEchoData(const TunnelHeader &header, int dataLength, uint32_t
 				syslog(LOG_INFO, "connection established");
 
 				uint32_t ip = ntohl(*(uint32_t *)echoReceivePayloadBuffer());
-				tun->setIp(ip, (ip & 0xffffff00) + 1, false);
+                if (ip != clientIp)
+				{
+                    if (privilegesDropped)
+                        throw Exception("could not get the same ip address, so root privileges are required to change it");
+
+                    clientIp = ip;
+                    desiredIp = ip;
+                    tun->setIp(ip, (ip & 0xffffff00) + 1, false);
+                }
 				state = STATE_ESTABLISHED;
 
 				dropPrivileges();

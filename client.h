@@ -28,8 +28,9 @@
 class Client : public Worker
 {
 public:
-	Client(int tunnelMtu, const char *deviceName, uint32_t serverIp, int maxPolls,
-		   const char *passphrase, uid_t uid, gid_t gid, bool changeEchoId, bool changeEchoSeq);
+	Client(int tunnelMtu, const char *deviceName, uint32_t serverIp,
+           int maxPolls, const char *passphrase, uid_t uid, gid_t gid,
+           bool changeEchoId, bool changeEchoSeq, uint32_t desiredIp);
 	virtual ~Client();
 
 	virtual void run();
@@ -59,6 +60,8 @@ protected:
 	Auth auth;
 
 	uint32_t serverIp;
+    uint32_t clientIp;
+    uint32_t desiredIp;
 
 	int maxPolls;
 	int pollTimeoutNr;

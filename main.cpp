@@ -36,7 +36,7 @@ void usage()
 	printf(
 		"Hans - IP over ICMP version 0.3.1\n\n"
 		"RUN AS SERVER\n"
-		"  hans -s network [-fvr] [-p password] [-u unprivileged_user] [-d tun_device] [-m reference_mtu]\n\n"
+		"  hans -s network [-fvr] [-p password] [-u unprivileged_user] [-d tun_device] [-m reference_mtu] [-a ip]\n\n"
 		"RUN AS CLIENT\n"
 		"  hans -c server  [-fv]  [-p password] [-u unprivileged_user] [-d tun_device] [-m reference_mtu] [-w polls]\n\n"
 		"ARGUMENTS\n"
@@ -54,7 +54,8 @@ void usage()
 		"  -w polls      Number of echo requests the client sends to the server for polling.\n"
 		"                0 disables polling. Defaults to 10.\n"
 		"  -i            Change the echo id for every echo request.\n"
-		"  -q            Change the echo sequence number for every echo request.\n"
+        "  -q            Change the echo sequence number for every echo request.\n"
+        "  -a ip         Try to get assigned the given tunnel ip address.\n"
 	);
 }
 
@@ -70,6 +71,7 @@ int main(int argc, char *argv[])
 	int mtu = 1500;
 	int maxPolls = 10;
 	uint32_t network = INADDR_NONE;
+    uint32_t clientIp = INADDR_NONE;
 	bool answerPing = false;
 	uid_t uid = 0;
 	gid_t gid = 0;
@@ -80,7 +82,7 @@ int main(int argc, char *argv[])
 	openlog(argv[0], LOG_PERROR, LOG_DAEMON);
 
 	int c;
-	while ((c = getopt(argc, argv, "fru:d:p:s:c:m:w:qiv")) != -1)
+	while ((c = getopt(argc, argv, "fru:d:p:s:c:m:w:qiva:")) != -1)
 	{
 		switch(c) {
 			case 'f':
@@ -123,6 +125,9 @@ int main(int argc, char *argv[])
 				break;
 			case 'v':
 				verbose = true;
+				break;
+			case 'a':
+				clientIp = ntohl(inet_addr(optarg));
 				break;
 			default:
 				usage();
@@ -190,7 +195,7 @@ int main(int argc, char *argv[])
 				serverIp = *(uint32_t *)he->h_addr;
 			}
 
-			worker = new Client(mtu, device, ntohl(serverIp), maxPolls, password, uid, gid, changeEchoId, changeEchoSeq);
+			worker = new Client(mtu, device, ntohl(serverIp), maxPolls, password, uid, gid, changeEchoId, changeEchoSeq, clientIp);
 		}
 
 		if (!foreground)

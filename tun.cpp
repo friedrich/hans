@@ -89,21 +89,14 @@ void Tun::setIp(uint32_t ip, uint32_t destIp, bool includeSubnet)
 void Tun::write(const char *buffer, int length)
 {
 	if (tun_write(fd, (char *)buffer, length) == -1)
-	{
-		syslog(LOG_ERR, "error writing %d bytes to tun", length);
-		if (errno != EINVAL) // can be caused by invalid data packet
-			throw Exception("writing to tun", true);
-	}
+		syslog(LOG_ERR, "error writing %d bytes to tun: %s", length, strerror(errno));
 }
 
 int Tun::read(char *buffer)
 {
 	int length = tun_read(fd, buffer, mtu);
 	if (length == -1)
-	{
-		syslog(LOG_ERR, "error reading from tun", length);
-		throw Exception("reading from tun", true);
-	}
+		syslog(LOG_ERR, "error reading from tun: %s", strerror(errno));
 	return length;
 }
 

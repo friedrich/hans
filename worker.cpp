@@ -175,7 +175,8 @@ void Worker::run()
 			if (dataLength == 0)
 				throw Exception("tunnel closed");
 
-			handleTunData(dataLength, sourceIp, destIp);
+            if (dataLength != -1)
+                handleTunData(dataLength, sourceIp, destIp);
 		}
 	}
 }
