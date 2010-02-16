@@ -21,6 +21,7 @@
 #define UTILITY_H
 
 #include <string>
+#include <stdint.h>
 
 class Utility
 {
