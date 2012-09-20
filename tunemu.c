@@ -100,12 +100,12 @@ static void tun_error(char *format, ...)
     va_end(vl);
 }
 
-static void tun_noerror()
+static void tun_noerror(void)
 {
     *tunemu_error = 0;
 }
 
-static void closeall()
+static void closeall(void)
 {
     int fd = getdtablesize();
     while (fd--)
@@ -116,7 +116,7 @@ static void closeall()
     dup(0);
 }
 
-static int ppp_load_kext()
+static int ppp_load_kext(void)
 {
     int pid = fork();
     if (pid < 0)
@@ -152,7 +152,7 @@ static int ppp_load_kext()
     return 0;
 }
 
-static int ppp_new_instance()
+static int ppp_new_instance(void)
 {
     // create ppp socket
     int ppp_sockfd = socket(PF_PPP, SOCK_RAW, PPPPROTO_CTL);
@@ -228,7 +228,7 @@ static int ppp_setup_unit(int unit_fd)
     return 0;
 }
 
-static int open_pcap()
+static int open_pcap(void)
 {
     if (pcap != NULL)
     {
@@ -250,7 +250,7 @@ static int open_pcap()
     return 0;
 }
 
-static void close_pcap()
+static void close_pcap(void)
 {
     if (pcap == NULL)
         return;
