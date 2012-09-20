@@ -20,8 +20,8 @@
 
 extern "C"
 {
-	int tun_open(char *dev);
-	int tun_close(int fd, char *dev);
-	int tun_write(int fd, char *buf, int len);
-	int tun_read(int fd, char *buf, int len);
+    int tun_open(char *dev);
+    int tun_close(int fd, char *dev);
+    int tun_write(int fd, char *buf, int len);
+    int tun_read(int fd, char *buf, int len);
 }

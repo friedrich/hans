@@ -74,7 +74,7 @@ int tun_open(char *dev)
     char *ptr;
 
     if( *dev ){
-       ptr = dev;	
+       ptr = dev;    
        while( *ptr && !isdigit((int)*ptr) ) ptr++; 
        ppa = atoi(ptr);
     }

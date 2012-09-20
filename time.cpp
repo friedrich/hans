@@ -23,63 +23,63 @@ const Time Time::ZERO = Time(0);
 
 Time::Time(int ms)
 {
-	tv.tv_sec = ms / 1000;
-	tv.tv_usec = (ms % 1000) * 1000;
+    tv.tv_sec = ms / 1000;
+    tv.tv_usec = (ms % 1000) * 1000;
 }
 
 Time Time::operator-(const Time &other) const
 {
-	Time result;
-	result.tv.tv_sec = tv.tv_sec - other.tv.tv_sec;
-	result.tv.tv_usec = tv.tv_usec - other.tv.tv_usec;
-	
-	if (result.tv.tv_usec < 0)
-	{
-		result.tv.tv_usec += 1000000;
-		result.tv.tv_sec -= 1;
-	}
-	
-	return result;
+    Time result;
+    result.tv.tv_sec = tv.tv_sec - other.tv.tv_sec;
+    result.tv.tv_usec = tv.tv_usec - other.tv.tv_usec;
+    
+    if (result.tv.tv_usec < 0)
+    {
+        result.tv.tv_usec += 1000000;
+        result.tv.tv_sec -= 1;
+    }
+    
+    return result;
 }
 
 Time Time::operator+(const Time &other) const
 {
-	Time result;
-	result.tv.tv_sec = tv.tv_sec + other.tv.tv_sec;
-	result.tv.tv_usec = tv.tv_usec + other.tv.tv_usec;
-	
-	if (result.tv.tv_usec >= 1000000)
-	{
-		result.tv.tv_usec -= 1000000;
-		result.tv.tv_sec += 1;
-	}
-	
-	return result;
+    Time result;
+    result.tv.tv_sec = tv.tv_sec + other.tv.tv_sec;
+    result.tv.tv_usec = tv.tv_usec + other.tv.tv_usec;
+    
+    if (result.tv.tv_usec >= 1000000)
+    {
+        result.tv.tv_usec -= 1000000;
+        result.tv.tv_sec += 1;
+    }
+    
+    return result;
 }
 
 bool Time::operator==(const Time &other) const
 {
-	return tv.tv_sec != other.tv.tv_sec ? false : tv.tv_usec == other.tv.tv_usec;
+    return tv.tv_sec != other.tv.tv_sec ? false : tv.tv_usec == other.tv.tv_usec;
 }
 
 bool Time::operator!=(const Time &other) const
 {
-	return tv.tv_sec != other.tv.tv_sec ? true : tv.tv_usec != other.tv.tv_usec;
+    return tv.tv_sec != other.tv.tv_sec ? true : tv.tv_usec != other.tv.tv_usec;
 }
 
 bool Time::operator<(const Time &other) const
 {
-	return tv.tv_sec != other.tv.tv_sec ? tv.tv_sec < other.tv.tv_sec : tv.tv_usec < other.tv.tv_usec;
+    return tv.tv_sec != other.tv.tv_sec ? tv.tv_sec < other.tv.tv_sec : tv.tv_usec < other.tv.tv_usec;
 }
 
 bool Time::operator>(const Time &other) const
 {
-	return tv.tv_sec != other.tv.tv_sec ? tv.tv_sec > other.tv.tv_sec : tv.tv_usec > other.tv.tv_usec;
+    return tv.tv_sec != other.tv.tv_sec ? tv.tv_sec > other.tv.tv_sec : tv.tv_usec > other.tv.tv_usec;
 }
 
 Time Time::now()
 {
-	Time result;
-	gettimeofday(&result.tv, 0);
-	return result;
+    Time result;
+    gettimeofday(&result.tv, 0);
+    return result;
 }

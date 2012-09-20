@@ -22,23 +22,23 @@
 
 int tun_open(char *dev)
 {
-	int fd = tunemu_open(dev);
-	if (fd < 0)
-		syslog(LOG_ERR, tunemu_error);
-	return fd;
+    int fd = tunemu_open(dev);
+    if (fd < 0)
+        syslog(LOG_ERR, tunemu_error);
+    return fd;
 }
 
 int tun_close(int fd, char *dev)
 {
-	return tunemu_close(fd);
+    return tunemu_close(fd);
 }
 
 int tun_write(int fd, char *buf, int len)
 {
-	return tunemu_write(fd, buf, len);
+    return tunemu_write(fd, buf, len);
 }
 
 int tun_read(int fd, char *buf, int len)
 {
-	return tunemu_read(fd, buf, len);
+    return tunemu_read(fd, buf, len);
 }

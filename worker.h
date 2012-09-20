@@ -29,76 +29,76 @@
 class Worker
 {
 public:
-	Worker(int tunnelMtu, const char *deviceName, bool answerEcho, uid_t uid, gid_t gid);
-	virtual ~Worker();
+    Worker(int tunnelMtu, const char *deviceName, bool answerEcho, uid_t uid, gid_t gid);
+    virtual ~Worker();
 
-	virtual void run();
+    virtual void run();
 
-	static int headerSize() { return sizeof(TunnelHeader); }
+    static int headerSize() { return sizeof(TunnelHeader); }
 
 protected:
-	struct TunnelHeader
-	{
-		struct Magic
-		{
-			Magic() { }
-			Magic(const char *magic);
+    struct TunnelHeader
+    {
+        struct Magic
+        {
+            Magic() { }
+            Magic(const char *magic);
 
-			bool operator==(const Magic &other) const;
-			bool operator!=(const Magic &other) const;
+            bool operator==(const Magic &other) const;
+            bool operator!=(const Magic &other) const;
 
-			char data[4];
-		};
+            char data[4];
+        };
 
-		Magic magic;
-		uint8_t type;
+        Magic magic;
+        uint8_t type;
 
-		enum Type
-		{
-			TYPE_RESET_CONNECTION	= 1,
-			TYPE_CONNECTION_REQUEST	= 2,
-			TYPE_CHALLENGE			= 3,
-			TYPE_CHALLENGE_RESPONSE	= 4,
-			TYPE_CONNECTION_ACCEPT	= 5,
-			TYPE_CHALLENGE_ERROR	= 6,
-			TYPE_DATA				= 7,
-			TYPE_POLL				= 8,
-			TYPE_SERVER_FULL		= 9
-		};
-	}; // size = 5
+        enum Type
+        {
+            TYPE_RESET_CONNECTION    = 1,
+            TYPE_CONNECTION_REQUEST    = 2,
+            TYPE_CHALLENGE            = 3,
+            TYPE_CHALLENGE_RESPONSE    = 4,
+            TYPE_CONNECTION_ACCEPT    = 5,
+            TYPE_CHALLENGE_ERROR    = 6,
+            TYPE_DATA                = 7,
+            TYPE_POLL                = 8,
+            TYPE_SERVER_FULL        = 9
+        };
+    }; // size = 5
 
-	virtual bool handleEchoData(const TunnelHeader &header, int dataLength, uint32_t realIp, bool reply, uint16_t id, uint16_t seq) { return true; }
-	virtual void handleTunData(int dataLength, uint32_t sourceIp, uint32_t destIp) { } // to echoSendPayloadBuffer
-	virtual void handleTimeout() { }
+    virtual bool handleEchoData(const TunnelHeader &header, int dataLength, uint32_t realIp, bool reply, uint16_t id, uint16_t seq) { return true; }
+    virtual void handleTunData(int dataLength, uint32_t sourceIp, uint32_t destIp) { } // to echoSendPayloadBuffer
+    virtual void handleTimeout() { }
 
-	void sendEcho(const TunnelHeader::Magic &magic, int type, int length, uint32_t realIp, bool reply, uint16_t id, uint16_t seq);
-	void sendToTun(int length); // from echoReceivePayloadBuffer
+    void sendEcho(const TunnelHeader::Magic &magic, int type, int length, uint32_t realIp, bool reply, uint16_t id, uint16_t seq);
+    void sendToTun(int length); // from echoReceivePayloadBuffer
 
-	void setTimeout(Time delta);
+    void setTimeout(Time delta);
 
-	char *echoSendPayloadBuffer() { return echo->sendPayloadBuffer() + sizeof(TunnelHeader); }
-	char *echoReceivePayloadBuffer() { return echo->receivePayloadBuffer() + sizeof(TunnelHeader); }
+    char *echoSendPayloadBuffer() { return echo->sendPayloadBuffer() + sizeof(TunnelHeader); }
+    char *echoReceivePayloadBuffer() { return echo->receivePayloadBuffer() + sizeof(TunnelHeader); }
 
-	int payloadBufferSize() { return tunnelMtu; }
+    int payloadBufferSize() { return tunnelMtu; }
 
-	void dropPrivileges();
+    void dropPrivileges();
 
-	Echo *echo;
-	Tun *tun;
-	bool alive;
-	bool answerEcho;
-	int tunnelMtu;
-	int maxTunnelHeaderSize;
-	uid_t uid;
-	gid_t gid;
+    Echo *echo;
+    Tun *tun;
+    bool alive;
+    bool answerEcho;
+    int tunnelMtu;
+    int maxTunnelHeaderSize;
+    uid_t uid;
+    gid_t gid;
 
-	bool privilegesDropped;
+    bool privilegesDropped;
 
-	Time now;
+    Time now;
 private:
-	int readIcmpData(int *realIp, int *id, int *seq);
+    int readIcmpData(int *realIp, int *id, int *seq);
 
-	Time nextTimeout;
+    Time nextTimeout;
 };
 
 #endif

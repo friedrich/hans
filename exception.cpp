@@ -26,13 +26,13 @@ using namespace std;
 
 Exception::Exception(const char *msg)
 {
-	this->msg = msg;
+    this->msg = msg;
 }
 
 Exception::Exception(const char *msg, bool appendSystemError)
 {
-	if (appendSystemError)
-		this->msg = string(msg) + ": " + strerror(errno);
-	else
-		this->msg = msg;
+    if (appendSystemError)
+        this->msg = string(msg) + ": " + strerror(errno);
+    else
+        this->msg = msg;
 }

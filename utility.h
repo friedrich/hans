@@ -26,8 +26,8 @@
 class Utility
 {
 public:
-	static std::string formatIp(uint32_t ip);
-	static int rand();
+    static std::string formatIp(uint32_t ip);
+    static int rand();
 };
 
 #endif

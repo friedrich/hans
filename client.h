@@ -28,50 +28,50 @@
 class Client : public Worker
 {
 public:
-	Client(int tunnelMtu, const char *deviceName, uint32_t serverIp,
+    Client(int tunnelMtu, const char *deviceName, uint32_t serverIp,
            int maxPolls, const char *passphrase, uid_t uid, gid_t gid,
            bool changeEchoId, bool changeEchoSeq, uint32_t desiredIp);
-	virtual ~Client();
+    virtual ~Client();
 
-	virtual void run();
+    virtual void run();
 
-	static const Worker::TunnelHeader::Magic magic;
+    static const Worker::TunnelHeader::Magic magic;
 protected:
-	enum State
-	{
-		STATE_CLOSED,
-		STATE_CONNECTION_REQUEST_SENT,
-		STATE_CHALLENGE_RESPONSE_SENT,
-		STATE_ESTABLISHED
-	};
+    enum State
+    {
+        STATE_CLOSED,
+        STATE_CONNECTION_REQUEST_SENT,
+        STATE_CHALLENGE_RESPONSE_SENT,
+        STATE_ESTABLISHED
+    };
 
-	virtual bool handleEchoData(const TunnelHeader &header, int dataLength, uint32_t realIp, bool reply, uint16_t id, uint16_t seq);
-	virtual void handleTunData(int dataLength, uint32_t sourceIp, uint32_t destIp);
-	virtual void handleTimeout();
+    virtual bool handleEchoData(const TunnelHeader &header, int dataLength, uint32_t realIp, bool reply, uint16_t id, uint16_t seq);
+    virtual void handleTunData(int dataLength, uint32_t sourceIp, uint32_t destIp);
+    virtual void handleTimeout();
 
-	void handleDataFromServer(int length);
+    void handleDataFromServer(int length);
 
-	void startPolling();
+    void startPolling();
 
-	void sendEchoToServer(int type, int dataLength);
-	void sendChallengeResponse(int dataLength);
-	void sendConnectionRequest();
+    void sendEchoToServer(int type, int dataLength);
+    void sendChallengeResponse(int dataLength);
+    void sendConnectionRequest();
 
-	Auth auth;
+    Auth auth;
 
-	uint32_t serverIp;
+    uint32_t serverIp;
     uint32_t clientIp;
     uint32_t desiredIp;
 
-	int maxPolls;
-	int pollTimeoutNr;
+    int maxPolls;
+    int pollTimeoutNr;
 
-	bool changeEchoId, changeEchoSeq;
+    bool changeEchoId, changeEchoSeq;
 
-	uint16_t nextEchoId;
-	uint16_t nextEchoSequence;
+    uint16_t nextEchoId;
+    uint16_t nextEchoSequence;
 
-	State state;
+    State state;
 };
 
 #endif

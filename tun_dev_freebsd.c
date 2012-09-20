@@ -60,9 +60,9 @@ int tun_open(char *dev)
     if( fd > -1 ){
        i=0;
        /* Disable extended modes */
-       ioctl(fd, TUNSLMODE, &i);	
+       ioctl(fd, TUNSLMODE, &i);    
        ioctl(fd, TUNSIFHEAD, &i);
-    }	
+    }    
     return fd;
 }
 

@@ -28,22 +28,22 @@
 class Auth
 {
 public:
-	typedef std::vector<char> Challenge;
+    typedef std::vector<char> Challenge;
 
-	struct Response
-	{
-		uint32_t data[5];
-		bool operator==(const Response &other) const { return memcmp(this, &other, sizeof(Response)) == 0; }
-	};
+    struct Response
+    {
+        uint32_t data[5];
+        bool operator==(const Response &other) const { return memcmp(this, &other, sizeof(Response)) == 0; }
+    };
 
-	Auth(const char *passphrase);
+    Auth(const char *passphrase);
 
-	Challenge generateChallenge(int length) const;
-	Response getResponse(const Challenge &challenge) const;
+    Challenge generateChallenge(int length) const;
+    Response getResponse(const Challenge &challenge) const;
 
 protected:
-	std::string passphrase;
-	std::string challenge;
+    std::string passphrase;
+    std::string challenge;
 };
 
 #endif

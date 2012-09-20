@@ -25,33 +25,33 @@
 
 Auth::Auth(const char *passphrase)
 {
-	this->passphrase = passphrase;
+    this->passphrase = passphrase;
 }
 
 Auth::Response Auth::getResponse(const Challenge &challenge) const
 {
-	SHA1 hasher;
+    SHA1 hasher;
 
-	Response response;
+    Response response;
 
-	hasher << passphrase.c_str();
-	hasher.Input(&challenge[0], challenge.size());
+    hasher << passphrase.c_str();
+    hasher.Input(&challenge[0], challenge.size());
 
-	hasher.Result((unsigned int *)response.data);
-	
-	for (int i = 0; i < 5; i++)
-		response.data[i] = htonl(response.data[i]);
+    hasher.Result((unsigned int *)response.data);
+    
+    for (int i = 0; i < 5; i++)
+        response.data[i] = htonl(response.data[i]);
 
-	return response;
+    return response;
 }
 
 Auth::Challenge Auth::generateChallenge(int length) const
 {
-	Challenge challenge;
-	challenge.resize(length);
+    Challenge challenge;
+    challenge.resize(length);
 
-	for (int i = 0; i < length; i++)
-		challenge[i] = Utility::rand();
+    for (int i = 0; i < length; i++)
+        challenge[i] = Utility::rand();
 
-	return challenge;
+    return challenge;
 }

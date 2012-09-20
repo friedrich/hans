@@ -26,33 +26,33 @@
 class Echo
 {
 public:
-	Echo(int maxPayloadSize);
-	~Echo();
+    Echo(int maxPayloadSize);
+    ~Echo();
 
-	int getFd() { return fd; }
+    int getFd() { return fd; }
 
-	void send(int payloadLength, uint32_t realIp, bool reply, uint16_t id, uint16_t seq);
-	int receive(uint32_t &realIp, bool &reply, uint16_t &id, uint16_t &seq);
+    void send(int payloadLength, uint32_t realIp, bool reply, uint16_t id, uint16_t seq);
+    int receive(uint32_t &realIp, bool &reply, uint16_t &id, uint16_t &seq);
 
-	char *sendPayloadBuffer() { return sendBuffer + headerSize(); }
-	char *receivePayloadBuffer() { return receiveBuffer + headerSize(); }
+    char *sendPayloadBuffer() { return sendBuffer + headerSize(); }
+    char *receivePayloadBuffer() { return receiveBuffer + headerSize(); }
 
-	static int headerSize();
+    static int headerSize();
 protected:
-	struct EchoHeader
-	{
-		uint8_t type;
-		uint8_t code;
-		uint16_t chksum;
-		uint16_t id;
-		uint16_t seq;
-	}; // size = 8
+    struct EchoHeader
+    {
+        uint8_t type;
+        uint8_t code;
+        uint16_t chksum;
+        uint16_t id;
+        uint16_t seq;
+    }; // size = 8
 
-	uint16_t icmpChecksum(const char *data, int length);
+    uint16_t icmpChecksum(const char *data, int length);
 
-	int fd;
-	int bufferSize;
-	char *sendBuffer, *receiveBuffer;
+    int fd;
+    int bufferSize;
+    char *sendBuffer, *receiveBuffer;
 };
 
 #endif

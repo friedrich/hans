@@ -25,24 +25,24 @@
 class Time
 {
 public:
-	Time() { tv.tv_sec = 0; tv.tv_usec = 0; };
-	Time(int ms);
+    Time() { tv.tv_sec = 0; tv.tv_usec = 0; };
+    Time(int ms);
 
-	timeval &getTimeval() { return tv; }
+    timeval &getTimeval() { return tv; }
 
-	Time operator+(const Time &other) const;
-	Time operator-(const Time &other) const;
+    Time operator+(const Time &other) const;
+    Time operator-(const Time &other) const;
 
-	bool operator!=(const Time &other) const;
-	bool operator==(const Time &other) const;
-	bool operator<(const Time &other) const;
-	bool operator>(const Time &other) const;
+    bool operator!=(const Time &other) const;
+    bool operator==(const Time &other) const;
+    bool operator<(const Time &other) const;
+    bool operator>(const Time &other) const;
 
-	static Time now();
+    static Time now();
 
-	static const Time ZERO;
+    static const Time ZERO;
 protected:
-	timeval tv;
+    timeval tv;
 };
 
 #endif

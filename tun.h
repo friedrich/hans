@@ -28,22 +28,22 @@
 class Tun
 {
 public:
-	Tun(const char *device, int mtu);
-	~Tun();
+    Tun(const char *device, int mtu);
+    ~Tun();
 
-	int getFd() { return fd; }
+    int getFd() { return fd; }
 
-	int read(char *buffer);
-	int read(char *buffer, uint32_t &sourceIp, uint32_t &destIp);
+    int read(char *buffer);
+    int read(char *buffer, uint32_t &sourceIp, uint32_t &destIp);
 
-	void write(const char *buffer, int length);
+    void write(const char *buffer, int length);
 
-	void setIp(uint32_t ip, uint32_t destIp, bool includeSubnet);
+    void setIp(uint32_t ip, uint32_t destIp, bool includeSubnet);
 protected:
-	char device[VTUN_DEV_LEN];
+    char device[VTUN_DEV_LEN];
 
-	int mtu;
-	int fd;
+    int mtu;
+    int fd;
 };
 
 #endif

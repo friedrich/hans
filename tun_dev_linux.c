@@ -62,11 +62,11 @@ static int tun_open_common0(char *dev, int istun)
        }
        else if (errno != ENOENT)
           err = errno;
-       else if (i)	/* don't try all 256 devices */
+       else if (i)    /* don't try all 256 devices */
           break;
     }
     if (err)
-	errno = err;
+    errno = err;
     return -1;
 }
 
@@ -97,9 +97,9 @@ static int tun_open_common(char *dev, int istun)
 
     if (ioctl(fd, TUNSETIFF, (void *) &ifr) < 0) {
        if (errno == EBADFD) {
-	  /* Try old ioctl */
- 	  if (ioctl(fd, OTUNSETIFF, (void *) &ifr) < 0) 
-	     goto failed;
+      /* Try old ioctl */
+       if (ioctl(fd, OTUNSETIFF, (void *) &ifr) < 0) 
+         goto failed;
        } else
           goto failed;
     } 
