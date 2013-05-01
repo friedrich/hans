@@ -8,7 +8,7 @@ ld)
     case $OS in
         DARWIN)
             if [ "$MODE" == TUNEMU ]; then
-                echo tunemu.o -lpcap
+                echo build/tunemu.o -lpcap
             fi
         ;;
     esac
@@ -28,23 +28,23 @@ c)
 dev)
     case $OS in
         LINUX)
-            echo tun_dev_linux.c
+            echo src/tun_dev_linux.c
         ;;
         FREEBSD)
-            echo tun_dev_freebsd.c
+            echo src/tun_dev_freebsd.c
         ;;
         OPENBSD)
-            echo tun_dev_openbsd.c
+            echo src/tun_dev_openbsd.c
         ;;
         DARWIN)
             if [ "$MODE" == TUNEMU ]; then
-                echo tun_dev_darwin_emu.c
+                echo src/tun_dev_darwin_emu.c
             else
-                echo tun_dev_generic.c
+                echo src/tun_dev_generic.c
             fi
         ;;
         *)
-            echo tun_dev_generic.c
+            echo src/tun_dev_generic.c
         ;;
     esac
     ;;
