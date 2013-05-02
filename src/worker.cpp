@@ -24,7 +24,9 @@
 
 #include <string.h>
 #include <syslog.h>
+#include <sys/types.h>
 #include <unistd.h>
+#include <sys/select.h>
 
 using namespace std;
 

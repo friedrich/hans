@@ -25,6 +25,7 @@
 #include "tun.h"
 
 #include <string>
+#include <sys/types.h>
 
 class Worker
 {

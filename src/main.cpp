@@ -24,12 +24,16 @@
 #include <stdio.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <sys/types.h>
+#include <stdlib.h>
 #include <pwd.h>
 #include <netdb.h>
+// #include <uuid/uuid.h>
 #include <string.h>
-#include <stdlib.h>
 #include <errno.h>
 #include <syslog.h>
+#include <unistd.h>
+#include <sys/socket.h>
 
 void usage()
 {

@@ -25,6 +25,7 @@
 
 #include <string.h>
 #include <arpa/inet.h>
+#include <netinet/in.h>
 #include <syslog.h>
 
 using namespace std;

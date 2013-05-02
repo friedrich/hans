@@ -28,7 +28,9 @@
 #include <unistd.h>
 #include <errno.h>
 #include <syslog.h>
+#include <stdio.h>
 #include <string.h>
+#include <sys/types.h>
 
 typedef ip IpHeader;
 

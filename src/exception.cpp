@@ -20,6 +20,7 @@
 #include "exception.h"
 
 #include <errno.h>
+#include <stdio.h>
 #include <string.h>
 
 using namespace std;

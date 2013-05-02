@@ -28,6 +28,8 @@
 
 #include "tunemu.h"
 
+#include <sys/types.h>
+#include <sys/io.h>
 #include <sys/socket.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
@@ -42,6 +44,7 @@
 #include <stdint.h>
 #include <ctype.h>
 #include <fcntl.h>
+#include <string.h>
 
 #define PPPPROTO_CTL 1
 
