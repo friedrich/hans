@@ -1,10 +1,7 @@
-Changelog for hans
-==================
-
-Release ???
+Release 0.4.2 (Mai 2013)
 -----------------
+* Fixed compilation issue on Linux
 * Changed the license of tunemu from GPL to BSD
-* Added this changelog
 * Minor changes
 
 Release 0.4.1 (February 2010)
