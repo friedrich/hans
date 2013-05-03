@@ -1,7 +1,7 @@
 /*
  *  tunemu - Tun device emulation for Darwin
  *
- *  Copyright (c) 2009-2010 Friedrich Schöller <hans@schoeller.se>
+ *  Copyright (c) 2009-2013 Friedrich Schöller <hans@schoeller.se>
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,20 +28,18 @@
 
 #include "tunemu.h"
 
-#include <sys/types.h>
-#include <sys/io.h>
-#include <sys/socket.h>
-#include <unistd.h>
-#include <sys/ioctl.h>
-#include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <stdint.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/ioctl.h>
 #include <memory.h>
 #include <util.h>
 #include <pcap.h>
 #include <stdarg.h>
 #include <errno.h>
-#include <stdint.h>
-#include <stdint.h>
 #include <ctype.h>
 #include <fcntl.h>
 #include <string.h>

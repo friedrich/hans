@@ -1,7 +1,7 @@
 /*
  *  tunemu - Tun device emulation for Darwin
  *
- *  Copyright (c) 2009-2010 Friedrich Schöller <hans@schoeller.se>
+ *  Copyright (c) 2009-2013 Friedrich Schöller <hans@schoeller.se>
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
