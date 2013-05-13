@@ -36,6 +36,8 @@ using namespace std;
 
 Tun::Tun(const char *device, int mtu)
 {
+    char cmdline[512];
+
     this->mtu = mtu;
 
     if (device != NULL)
@@ -52,10 +54,15 @@ Tun::Tun(const char *device, int mtu)
 
     syslog(LOG_INFO, "opened tunnel device: %s", this->device);
 
-    char cmdline[512];
+#ifdef WIN32
+    snprintf(cmdline, sizeof(cmdline), "netsh interface ipv4 set subinterface \"%s\" mtu=%d", this->device, mtu);
+    if (system(cmdline) != 0)
+        syslog(LOG_ERR, "could not set tun device mtu");
+#else
     snprintf(cmdline, sizeof(cmdline), "/sbin/ifconfig %s mtu %u", this->device, mtu);
     if (system(cmdline) != 0)
         syslog(LOG_ERR, "could not set tun device mtu");
+#endif
 }
 
 Tun::~Tun()
@@ -69,16 +76,23 @@ void Tun::setIp(uint32_t ip, uint32_t destIp, bool includeSubnet)
     string ips = Utility::formatIp(ip);
     string destIps = Utility::formatIp(destIp);
 
-#ifdef LINUX
-    snprintf(cmdline, sizeof(cmdline), "/sbin/ifconfig %s %s netmask 255.255.255.0", device, ips.c_str());
-#else
-    snprintf(cmdline, sizeof(cmdline), "/sbin/ifconfig %s %s %s netmask 255.255.255.255", device, ips.c_str(), destIps.c_str());
-#endif
-
+#ifdef WIN32
+    snprintf(cmdline, sizeof(cmdline), "netsh interface ip set address name=\"%s\" "
+        "static %s 255.255.255.0", device, ips.c_str());
     if (system(cmdline) != 0)
         syslog(LOG_ERR, "could not set tun device ip address");
 
-#ifndef LINUX
+    if (!tun_set_ip(fd, ip, ip & 0xffffff00, 0xffffff00))
+        syslog(LOG_ERR, "could not set tun device driver ip address: %s", tun_last_error());
+#elif LINUX
+    snprintf(cmdline, sizeof(cmdline), "/sbin/ifconfig %s %s netmask 255.255.255.0", device, ips.c_str());
+    if (system(cmdline) != 0)
+        syslog(LOG_ERR, "could not set tun device ip address");
+#else
+    snprintf(cmdline, sizeof(cmdline), "/sbin/ifconfig %s %s %s netmask 255.255.255.255", device, ips.c_str(), destIps.c_str());
+    if (system(cmdline) != 0)
+        syslog(LOG_ERR, "could not set tun device ip address");
+
     if (includeSubnet)
     {
         snprintf(cmdline, sizeof(cmdline), "/sbin/route add %s/24 %s", destIps.c_str(), destIps.c_str());

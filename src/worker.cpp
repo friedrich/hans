@@ -185,6 +185,7 @@ void Worker::run()
 
 void Worker::dropPrivileges()
 {
+#ifndef WIN32
     if (uid <= 0 || privilegesDropped)
         return;
 
@@ -197,4 +198,5 @@ void Worker::dropPrivileges()
         throw Exception("setuid", true);
 
     privilegesDropped = true;
+#endif
 }

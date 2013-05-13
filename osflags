@@ -20,6 +20,9 @@ c)
         LINUX)
             echo $FLAGS -DHAVE_LINUX_IF_TUN_H
         ;;
+        CYGWIN*)
+            echo $FLAGS -DWIN32
+        ;;
         *)
             echo $FLAGS
         ;;
@@ -43,10 +46,12 @@ dev)
                 echo src/tun_dev_generic.c
             fi
         ;;
+        CYGWIN*)
+            echo src/tun_dev_cygwin.c
+        ;;
         *)
             echo src/tun_dev_generic.c
         ;;
     esac
     ;;
 esac
-

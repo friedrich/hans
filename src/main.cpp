@@ -170,6 +170,10 @@ int main(int argc, char *argv[])
 
     if (userName != NULL)
     {
+#ifdef WIN32
+        syslog(LOG_ERR, "dropping privileges is not supported on Windows");
+        return 1;
+#endif
         passwd *pw = getpwnam(userName);
 
         if (pw != NULL)
