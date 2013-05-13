@@ -50,6 +50,8 @@ Tun::Tun(const char *device, int mtu)
     if (fd == -1)
         throw Exception(string("could not create tunnel device: ") + tun_last_error());
 
+    syslog(LOG_INFO, "opened tunnel device: %s", this->device);
+
     char cmdline[512];
     snprintf(cmdline, sizeof(cmdline), "/sbin/ifconfig %s mtu %u", this->device, mtu);
     if (system(cmdline) != 0)
