@@ -35,6 +35,16 @@
 #include <unistd.h>
 #include <sys/socket.h>
 
+static void sig_term_handler(int)
+{
+    syslog(LOG_INFO, "SIGTERM received");
+}
+
+static void sig_int_handler(int)
+{
+    syslog(LOG_INFO, "SIGINT received");
+}
+
 void usage()
 {
     printf(
@@ -176,10 +186,12 @@ int main(int argc, char *argv[])
     if (!verbose)
         setlogmask(LOG_UPTO(LOG_INFO));
 
+    signal(SIGTERM, sig_term_handler);
+    signal(SIGINT, sig_int_handler);
+
+    Worker *worker;
     try
     {
-        Worker *worker;
-
         if (isServer)
         {
             worker = new Server(mtu, device, password, network, answerPing, uid, gid, 5000);
@@ -213,6 +225,7 @@ int main(int argc, char *argv[])
     catch (Exception e)
     {
         syslog(LOG_ERR, "%s", e.errorMessage());
+        delete worker;
         return 1;
     }
 
