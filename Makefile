@@ -6,7 +6,7 @@ GPP = g++
 
 .PHONY: directories
 
-all: hans
+all: directories hans
 
 directories: build_dir
 
@@ -15,7 +15,7 @@ build_dir:
 
 tunemu.o: directories build/tunemu.o
 
-hans: directories build/tun.o build/sha1.o build/main.o build/client.o build/server.o build/auth.o build/worker.o build/time.o build/tun_dev.o build/echo.o build/exception.o build/utility.o
+hans: build/tun.o build/sha1.o build/main.o build/client.o build/server.o build/auth.o build/worker.o build/time.o build/tun_dev.o build/echo.o build/exception.o build/utility.o
 	$(GPP) -o hans build/tun.o build/sha1.o build/main.o build/client.o build/server.o build/auth.o build/worker.o build/time.o build/tun_dev.o build/echo.o build/exception.o build/utility.o $(LDFLAGS)
 
 build/utility.o: src/utility.cpp src/utility.h
@@ -55,8 +55,7 @@ build/time.o: src/time.cpp src/time.h
 	$(GPP) -c src/time.cpp -o $@ $(CFLAGS)
 
 clean:
-	rm -f build/tun.o build/sha1.o build/main.o build/client.o build/server.o build/auth.o build/worker.o build/time.o build/tun_dev.o build/echo.o build/exception.o build/utility.o build/tunemu.o hans
-	rm -df build
+	rm -rf build hans
 
 build/tunemu.o: src/tunemu.h src/tunemu.c
 	$(GCC) -c src/tunemu.c -o build/tunemu.o
