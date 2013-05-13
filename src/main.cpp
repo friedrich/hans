@@ -45,7 +45,7 @@ static void sig_int_handler(int)
     syslog(LOG_INFO, "SIGINT received");
 }
 
-void usage()
+static void usage()
 {
     printf(
         "Hans - IP over ICMP version 0.4.1\n\n"
