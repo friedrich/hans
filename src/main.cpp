@@ -92,7 +92,8 @@ int main(int argc, char *argv[])
     bool changeEchoId = false;
     bool changeEchoSeq = false;
     bool verbose = false;
-    
+    Worker *worker = NULL;
+
     openlog(argv[0], LOG_PERROR, LOG_DAEMON);
 
     int c;
@@ -189,7 +190,6 @@ int main(int argc, char *argv[])
     signal(SIGTERM, sig_term_handler);
     signal(SIGINT, sig_int_handler);
 
-    Worker *worker;
     try
     {
         if (isServer)
