@@ -28,6 +28,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <syslog.h>
+#include <errno.h>
 
 /* #include "vtun.h"
 #include "lib.h" */
@@ -71,4 +72,9 @@ int tun_write(int fd, char *buf, int len)
 int tun_read(int fd, char *buf, int len)
 {
     return read(fd, buf, len);
+}
+
+const char *tun_last_error()
+{
+    return strerror(errno);
 }

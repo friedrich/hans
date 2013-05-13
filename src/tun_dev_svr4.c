@@ -175,3 +175,8 @@ int tun_read(int fd, char *buf, int len)
     sbuf.buf = buf;      
     return getmsg(fd, NULL, &sbuf, &f) >=0 ? sbuf.len : -1;
 }
+
+const char *tun_last_error()
+{
+    return strerror(errno);
+}

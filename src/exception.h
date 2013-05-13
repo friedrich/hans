@@ -23,8 +23,9 @@ class Exception
 {
 public:
     Exception(const char *msg);
+    Exception(const std::string msg);
     Exception(const char *msg, bool appendSystemError);
-    
+
     const char *errorMessage() const { return msg.c_str(); }
 protected:
     std::string msg;

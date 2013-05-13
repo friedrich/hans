@@ -28,7 +28,6 @@
 #include <syslog.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
 #include <stdio.h>
 
 typedef ip IpHeader;
@@ -49,7 +48,7 @@ Tun::Tun(const char *device, int mtu)
 
     fd = tun_open(this->device);
     if (fd == -1)
-        throw Exception("could not create tunnel device");
+        throw Exception(string("could not create tunnel device: ") + tun_last_error());
 
     char cmdline[512];
     snprintf(cmdline, sizeof(cmdline), "/sbin/ifconfig %s mtu %u", this->device, mtu);
@@ -90,14 +89,14 @@ void Tun::setIp(uint32_t ip, uint32_t destIp, bool includeSubnet)
 void Tun::write(const char *buffer, int length)
 {
     if (tun_write(fd, (char *)buffer, length) == -1)
-        syslog(LOG_ERR, "error writing %d bytes to tun: %s", length, strerror(errno));
+        syslog(LOG_ERR, "error writing %d bytes to tun: %s", length, tun_last_error());
 }
 
 int Tun::read(char *buffer)
 {
     int length = tun_read(fd, buffer, mtu);
     if (length == -1)
-        syslog(LOG_ERR, "error reading from tun: %s", strerror(errno));
+        syslog(LOG_ERR, "error reading from tun: %s", tun_last_error());
     return length;
 }
 

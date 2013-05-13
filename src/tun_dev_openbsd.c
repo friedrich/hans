@@ -28,6 +28,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <syslog.h>
+#include <errno.h>
 
 #include <sys/types.h>
 #include <sys/uio.h>
@@ -97,4 +98,9 @@ int tun_read(int fd, char *buf, int len)
        return rlen - sizeof(type);
     else
        return rlen;
+}
+
+const char *tun_last_error()
+{
+    return strerror(errno);
 }

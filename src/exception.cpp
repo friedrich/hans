@@ -30,6 +30,11 @@ Exception::Exception(const char *msg)
     this->msg = msg;
 }
 
+Exception::Exception(const string msg)
+{
+    this->msg = msg;
+}
+
 Exception::Exception(const char *msg, bool appendSystemError)
 {
     if (appendSystemError)

@@ -24,4 +24,5 @@ extern "C"
     int tun_close(int fd, char *dev);
     int tun_write(int fd, char *buf, int len);
     int tun_read(int fd, char *buf, int len);
+    const char *tun_last_error();
 }
