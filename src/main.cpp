@@ -54,7 +54,7 @@ static void usage()
         "RUN AS CLIENT\n"
         "  hans -c server  [-fv]  [-p password] [-u unprivileged_user] [-d tun_device] [-m reference_mtu] [-w polls]\n\n"
         "ARGUMENTS\n"
-        "  -s network    Run as a server with the given network address for the virtual interface.\n"
+        "  -s network    Run as a server with the given network address for the virtual interface. Linux only!\n"
         "  -c server     Connect to a server.\n"
         "  -f            Run in foreground.\n"
         "  -v            Print debug information.\n"
