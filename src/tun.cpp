@@ -30,9 +30,27 @@
 #include <string.h>
 #include <stdio.h>
 
+#ifdef WIN32
+#include <w32api/windows.h>
+#endif
+
 typedef ip IpHeader;
 
 using namespace std;
+
+#ifdef WIN32
+void winsystem(char *cmd)
+{
+    STARTUPINFO info = { sizeof(info) };
+    PROCESS_INFORMATION processInfo;
+    if (CreateProcess(NULL, cmd, NULL, NULL, TRUE, 0, NULL, NULL, &info, &processInfo))
+    {
+        WaitForSingleObject(processInfo.hProcess, INFINITE);
+        CloseHandle(processInfo.hProcess);
+        CloseHandle(processInfo.hThread);
+    }
+}
+#endif
 
 Tun::Tun(const char *device, int mtu)
 {
@@ -56,8 +74,7 @@ Tun::Tun(const char *device, int mtu)
 
 #ifdef WIN32
     snprintf(cmdline, sizeof(cmdline), "netsh interface ipv4 set subinterface \"%s\" mtu=%d", this->device, mtu);
-    if (system(cmdline) != 0)
-        syslog(LOG_ERR, "could not set tun device mtu");
+    winsystem(cmdline);
 #else
     snprintf(cmdline, sizeof(cmdline), "/sbin/ifconfig %s mtu %u", this->device, mtu);
     if (system(cmdline) != 0)
@@ -79,8 +96,7 @@ void Tun::setIp(uint32_t ip, uint32_t destIp, bool includeSubnet)
 #ifdef WIN32
     snprintf(cmdline, sizeof(cmdline), "netsh interface ip set address name=\"%s\" "
         "static %s 255.255.255.0", device, ips.c_str());
-    if (system(cmdline) != 0)
-        syslog(LOG_ERR, "could not set tun device ip address");
+    winsystem(cmdline);
 
     if (!tun_set_ip(fd, ip, ip & 0xffffff00, 0xffffff00))
         syslog(LOG_ERR, "could not set tun device driver ip address: %s", tun_last_error());
