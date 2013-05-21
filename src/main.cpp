@@ -34,6 +34,7 @@
 #include <syslog.h>
 #include <unistd.h>
 #include <sys/socket.h>
+#include <signal.h>
 
 static void sig_term_handler(int)
 {
