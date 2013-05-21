@@ -36,14 +36,20 @@
 #include <sys/socket.h>
 #include <signal.h>
 
+static Worker *worker = NULL;
+
 static void sig_term_handler(int)
 {
     syslog(LOG_INFO, "SIGTERM received");
+    if (worker)
+        worker->stop();
 }
 
 static void sig_int_handler(int)
 {
     syslog(LOG_INFO, "SIGINT received");
+    if (worker)
+        worker->stop();
 }
 
 static void usage()
@@ -93,7 +99,6 @@ int main(int argc, char *argv[])
     bool changeEchoId = false;
     bool changeEchoSeq = false;
     bool verbose = false;
-    Worker *worker = NULL;
 
     openlog(argv[0], LOG_PERROR, LOG_DAEMON);
 

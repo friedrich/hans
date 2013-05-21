@@ -34,6 +34,7 @@ public:
     virtual ~Worker();
 
     virtual void run();
+    virtual void stop();
 
     static int headerSize() { return sizeof(TunnelHeader); }
 
