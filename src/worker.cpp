@@ -127,7 +127,12 @@ void Worker::run()
         // wait for data or timeout
         int result = select(maxFd + 1 , &fs, NULL, NULL, nextTimeout != Time::ZERO ? &timeout.getTimeval() : NULL);
         if (result == -1)
-            throw Exception("select", true);
+        {
+            if (alive)
+                throw Exception("select", true);
+            else
+                return;
+        }
         now = Time::now();
 
         // timeout
@@ -181,6 +186,11 @@ void Worker::run()
                 handleTunData(dataLength, sourceIp, destIp);
         }
     }
+}
+
+void Worker::stop()
+{
+    alive = false;
 }
 
 void Worker::dropPrivileges()
