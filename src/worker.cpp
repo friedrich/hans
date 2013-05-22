@@ -195,7 +195,9 @@ void Worker::stop()
 
 void Worker::dropPrivileges()
 {
-#ifndef WIN32
+#ifdef WIN32
+    throw Exception("not supported");
+#else
     if (uid <= 0 || privilegesDropped)
         return;
 
