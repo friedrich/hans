@@ -39,7 +39,7 @@ typedef ip IpHeader;
 using namespace std;
 
 #ifdef WIN32
-void winsystem(char *cmd)
+static void winsystem(char *cmd)
 {
     STARTUPINFO info = { sizeof(info) };
     PROCESS_INFORMATION processInfo;

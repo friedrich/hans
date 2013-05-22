@@ -176,7 +176,7 @@ static __stdcall DWORD reader_thread(LPVOID ptr)
         {
             if (GetLastError() != ERROR_IO_PENDING)
             {
-                syslog(LOG_ERR, "error reading tap: %s", winerror(GetLastError()));
+                syslog(LOG_ERR, "error reading from tap adapter: %s", winerror(GetLastError()));
                 return 1;
             }
 
@@ -190,7 +190,7 @@ static __stdcall DWORD reader_thread(LPVOID ptr)
 
             if (!GetOverlappedResult(adapter_info->adapter_handle, &overlapped, &len, true))
             {
-                syslog(LOG_ERR, "error waiting for operation to complete: %s", winerror(GetLastError()));
+                syslog(LOG_ERR, "error getting tap adapter reading result: %s", winerror(GetLastError()));
                 return 1;
             }
         }
@@ -301,7 +301,7 @@ bool tun_set_ip(int fd, uint32_t local, uint32_t network, uint32_t netmask)
     if (!DeviceIoControl(adapter_info->adapter_handle, TAP_WIN_IOCTL_CONFIG_TUN,
         &addresses, sizeof(addresses), &addresses, sizeof(addresses), &len, NULL))
     {
-        error("configuring tap addresses", winerror(GetLastError()));
+        error("configuring tap addresses: %s", winerror(GetLastError()));
         return false;
     }
 
