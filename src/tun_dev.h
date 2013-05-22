@@ -18,10 +18,18 @@
  *  
  */
 
+#ifdef WIN32
+
 #include <stdint.h>
 #include <stdbool.h>
 
 #define VTUN_DEV_LEN 100
+
+#else
+
+#define VTUN_DEV_LEN 20
+
+#endif
 
 #ifdef __cplusplus
 extern "C" {
