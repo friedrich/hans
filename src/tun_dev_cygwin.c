@@ -162,7 +162,7 @@ static HANDLE open_tap_adapter(char *name)
 static __stdcall DWORD reader_thread(LPVOID ptr)
 {
     struct adapter_info *adapter_info = ptr;
-    char buf[0xffff]; // TODO: MTU
+    char buf[0xffff]; // maximum IPv4 packet size
     OVERLAPPED overlapped;
     DWORD len;
     int wait_result;
@@ -180,13 +180,7 @@ static __stdcall DWORD reader_thread(LPVOID ptr)
                 return 1;
             }
 
-            wait_result = WaitForSingleObjectEx(overlapped.hEvent, INFINITE, true); // or false?
-
-            if (wait_result == WAIT_IO_COMPLETION)
-            {
-                printf("hui?\n");
-                continue;
-            }
+            wait_result = WaitForSingleObjectEx(overlapped.hEvent, INFINITE, false);
 
             if (wait_result != WAIT_OBJECT_0)
             {
@@ -201,7 +195,6 @@ static __stdcall DWORD reader_thread(LPVOID ptr)
             }
         }
 
-        // printf("success: %d\n", len);
         write(adapter_info->reader_write_fd, buf, len);
     }
 }
