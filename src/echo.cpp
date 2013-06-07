@@ -1,20 +1,20 @@
 /*
  *  Hans - IP over ICMP
  *  Copyright (C) 2009 Friedrich Schöller <hans@schoeller.se>
- *  
+ *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation, either version 3 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *  
+ *
  */
 
 #include "echo.h"
@@ -111,12 +111,12 @@ uint16_t Echo::icmpChecksum(const char *data, int length)
 {
     uint16_t *data16 = (uint16_t *)data;
     uint32_t sum = 0;
-    
+
     for (sum = 0; length > 1; length -= 2)
         sum += *data16++;
     if (length == 1)
         sum += *(unsigned char *)data16;
-    
+
     sum = (sum >> 16) + (sum & 0xffff);
     sum += (sum >> 16);
     return ~sum;
