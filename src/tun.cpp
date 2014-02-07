@@ -41,7 +41,7 @@ Tun::Tun(const char *device, int mtu)
     if (device != NULL)
     {
         strncpy(this->device, device, VTUN_DEV_LEN);
-        this->device[VTUN_DEV_LEN] = 0;
+        this->device[VTUN_DEV_LEN-1] = 0;
     }
     else
         this->device[0] = 0;
