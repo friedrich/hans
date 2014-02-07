@@ -1,9 +1,13 @@
+Release 0.4.4 (February 2014)
+-----------------------------
+* Fixed writing beyond array bounds
+
 Release 0.4.3 (Mai 2013)
------------------
+------------------------
 * Fixed tunemu compiling issue
 
 Release 0.4.2 (Mai 2013)
------------------
+------------------------
 * Fixed compilation issue on Linux
 * Changed the license of tunemu from GPL to BSD
 * Minor changes

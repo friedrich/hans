@@ -1,20 +1,20 @@
 /*
  *  Hans - IP over ICMP
  *  Copyright (C) 2009 Friedrich Schöller <hans@schoeller.se>
- *  
+ *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation, either version 3 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *  
+ *
  */
 
 #include "client.h"
@@ -55,7 +55,7 @@ static void sig_int_handler(int)
 static void usage()
 {
     printf(
-        "Hans - IP over ICMP version 0.4.3\n\n"
+        "Hans - IP over ICMP version 0.4.4\n\n"
         "RUN AS SERVER\n"
         "  hans -s network [-fvr] [-p password] [-u unprivileged_user] [-d tun_device] [-m reference_mtu] [-a ip]\n\n"
         "RUN AS CLIENT\n"
@@ -117,7 +117,7 @@ int main(int argc, char *argv[])
                 break;
             case 'p':
                 password = strdup(optarg);
-                memset(optarg, 0, strlen(optarg)); 
+                memset(optarg, 0, strlen(optarg));
                 break;
             case 'c':
                 isClient = true;
