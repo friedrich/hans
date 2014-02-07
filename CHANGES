@@ -1,3 +1,5 @@
+Release 0.4.4 (February 2014)
+-----------------------------
 * Fixed writing beyond array bounds
 
 Release 0.4.3 (Mai 2013)

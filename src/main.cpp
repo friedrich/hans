@@ -55,7 +55,7 @@ static void sig_int_handler(int)
 static void usage()
 {
     printf(
-        "Hans - IP over ICMP version 0.4.3\n\n"
+        "Hans - IP over ICMP version 0.4.4\n\n"
         "RUN AS SERVER\n"
         "  hans -s network [-fvr] [-p password] [-u unprivileged_user] [-d tun_device] [-m reference_mtu] [-a ip]\n\n"
         "RUN AS CLIENT\n"
