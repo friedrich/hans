@@ -195,12 +195,12 @@ void Worker::stop()
 
 void Worker::dropPrivileges()
 {
-#ifdef WIN32
-    throw Exception("not supported");
-#else
     if (uid <= 0 || privilegesDropped)
         return;
 
+#ifdef WIN32
+    throw Exception("dropping privileges not supported");
+#else
     syslog(LOG_INFO, "dropping privileges");
 
     if (setgid(gid) == -1)
