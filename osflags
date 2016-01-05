@@ -14,11 +14,9 @@ ld)
     esac
     ;;
 c)
-    FLAGS=-D$OS
-
     case $OS in
         LINUX)
-            echo $FLAGS -DHAVE_LINUX_IF_TUN_H
+            echo $FLAGS -DHAVE_LINUX_IF_TUN_H -DLINUX
         ;;
         CYGWIN*)
             echo $FLAGS -DWIN32
