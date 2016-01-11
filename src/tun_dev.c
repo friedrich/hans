@@ -87,7 +87,7 @@ static int tun_open_common(char *dev, int istun)
     struct ifreq ifr;
     int fd;
 
-    if ((fd = open("/dev/net/tun", O_RDWR)) < 0)
+    if ((fd = open("/dev/net/tun", O_RDWR)) < 0 && (fd = open("/dev/tun", O_RDWR)) < 0)
        return tun_open_common0(dev, istun);
 
     memset(&ifr, 0, sizeof(ifr));

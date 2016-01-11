@@ -18,18 +18,7 @@
  *  
  */
 
-#ifdef WIN32
-
-#include <stdint.h>
-#include <stdbool.h>
-
-#define VTUN_DEV_LEN 100
-
-#else
-
 #define VTUN_DEV_LEN 20
-
-#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -40,10 +29,6 @@ extern "C" {
     int tun_write(int fd, char *buf, int len);
     int tun_read(int fd, char *buf, int len);
     const char *tun_last_error();
-
-#ifdef WIN32
-    bool tun_set_ip(int fd, uint32_t local, uint32_t network, uint32_t netmask);
-#endif
 
 #ifdef __cplusplus
 }
