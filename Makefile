@@ -1,8 +1,8 @@
-LDFLAGS = `sh osflags ld $(MODE)`
-CFLAGS = -c -g `sh osflags c $(MODE)`
-TUN_DEV_FILE = `sh osflags dev $(MODE)`
-GCC = gcc
-GPP = g++
+LDFLAGS = -fPIE -pie
+CFLAGS = -c -g -DHAVE_LINUX_IF_TUN_H
+TUN_DEV_FILE = src/tun_dev.c
+GCC = arm-linux-androideabi-gcc
+GPP = arm-linux-androideabi-g++
 
 .PHONY: directories
 

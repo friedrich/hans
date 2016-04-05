@@ -195,9 +195,6 @@ void Worker::stop()
 
 void Worker::dropPrivileges()
 {
-#ifdef WIN32
-    throw Exception("not supported");
-#else
     if (uid <= 0 || privilegesDropped)
         return;
 
@@ -210,5 +207,4 @@ void Worker::dropPrivileges()
         throw Exception("setuid", true);
 
     privilegesDropped = true;
-#endif
 }
