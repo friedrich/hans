@@ -22,6 +22,7 @@
 #include "utility.h"
 
 #include <arpa/inet.h>
+#include <sys/types.h>
 #include <netinet/in_systm.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
