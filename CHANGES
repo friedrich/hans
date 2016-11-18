@@ -1,6 +1,15 @@
+Release 1.0 (November 2016)
+---------------------------
+* Added cygwin support
+* Remove supplementary groups when dropping privileges
+* Fixed compile error on FreeBSD
+
 Release 0.4.4 (February 2014)
 -----------------------------
 * Fixed writing beyond array bounds
+* Fixed some smaller bugs
+* Clean exit on signal
+* Improved error reporting
 
 Release 0.4.3 (Mai 2013)
 ------------------------
