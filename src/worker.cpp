@@ -27,6 +27,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <sys/select.h>
+#include <grp.h>
 
 using namespace std;
 
@@ -202,6 +203,9 @@ void Worker::dropPrivileges()
     throw Exception("dropping privileges not supported");
 #else
     syslog(LOG_INFO, "dropping privileges");
+
+    if (setgroups(0, NULL) == -1)
+        throw Exception("setgroups", true);
 
     if (setgid(gid) == -1)
         throw Exception("setgid", true);
