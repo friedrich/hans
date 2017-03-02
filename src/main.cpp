@@ -57,12 +57,14 @@ static void usage()
     printf(
         "Hans - IP over ICMP version 1.0\n\n"
         "RUN AS SERVER\n"
-        "  hans -s network [-fvr] [-p password] [-u unprivileged_user] [-d tun_device] [-m reference_mtu] [-a ip]\n\n"
+        "  hans -s network [-46fvr] [-p password] [-u unprivileged_user] [-d tun_device] [-m reference_mtu] [-a ip]\n\n"
         "RUN AS CLIENT\n"
-        "  hans -c server  [-fv]  [-p password] [-u unprivileged_user] [-d tun_device] [-m reference_mtu] [-w polls]\n\n"
+        "  hans -c server  [-46fv]  [-p password] [-u unprivileged_user] [-d tun_device] [-m reference_mtu] [-w polls]\n\n"
         "ARGUMENTS\n"
         "  -s network    Run as a server with the given network address for the virtual interface. Linux only!\n"
         "  -c server     Connect to a server.\n"
+        "  -4            Use IPv4 ICMP only.\n"
+        "  -6            Use IPv6 ICMPv6 only.\n"
         "  -f            Run in foreground.\n"
         "  -v            Print debug information.\n"
         "  -r            Respond to ordinary pings. Only in server mode.\n"
@@ -86,6 +88,8 @@ int main(int argc, char *argv[])
     const char *userName = NULL;
     const char *password = "";
     const char *device = NULL;
+    bool ipv4 = false;
+    bool ipv6 = false;
     bool isServer = false;
     bool isClient = false;
     bool foreground = false;
@@ -103,9 +107,15 @@ int main(int argc, char *argv[])
     openlog(argv[0], LOG_PERROR, LOG_DAEMON);
 
     int c;
-    while ((c = getopt(argc, argv, "fru:d:p:s:c:m:w:qiva:")) != -1)
+    while ((c = getopt(argc, argv, "46fru:d:p:s:c:m:w:qiva:")) != -1)
     {
         switch(c) {
+            case '4':
+                ipv4 = true;
+                break;
+            case '6':
+                ipv6 = true;
+                break;
             case 'f':
                 foreground = true;
                 break;
@@ -165,6 +175,11 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    if (!ipv4 && !ipv6) {
+        ipv4 = true;
+        ipv6 = true;
+    }
+
     if ((isClient == isServer) ||
         (isServer && network == INADDR_NONE) ||
         (maxPolls < 0 || maxPolls > 255) ||
@@ -204,24 +219,37 @@ int main(int argc, char *argv[])
     {
         if (isServer)
         {
-            worker = new Server(mtu, device, password, network, answerPing, uid, gid, 5000);
+            worker = new Server(mtu, device, password, network, answerPing, uid, gid, 5000, ipv4, ipv6);
         }
         else
         {
-            uint32_t serverIp = inet_addr(serverName);
-            if (serverIp == INADDR_NONE)
-            {
-                struct hostent* he = gethostbyname(serverName);
-                if (!he)
-                {
-                    syslog(LOG_ERR, "gethostbyname: %s", hstrerror(h_errno));
-                    return 1;
-                }
+            in6_addr_union serverIp = { 0 };
+            struct addrinfo proto = { 0 };
+            struct addrinfo* ainfo;
 
-                serverIp = *(uint32_t *)he->h_addr;
+            if (ipv4 && !ipv6) proto.ai_family = AF_INET;
+            else if (!ipv4 && ipv6) proto.ai_family = AF_INET6;
+            else if (ipv4 && ipv6) proto.ai_family = AF_UNSPEC;
+            int ai = getaddrinfo(serverName, NULL, &proto, &ainfo);
+
+            if (ai)
+            {
+                syslog(LOG_ERR, "getaddrinfo: %s", gai_strerror(ai));
+                return 1;
             }
 
-            worker = new Client(mtu, device, ntohl(serverIp), maxPolls, password, uid, gid, changeEchoId, changeEchoSeq, clientIp);
+            if (ainfo->ai_family == AF_INET) {
+                serverIp.in6_addr_union_32[0] = 0;
+                serverIp.in6_addr_union_32[1] = 0;
+                serverIp.in6_addr_union_16[4] = 0;
+                serverIp.in6_addr_union_16[5] = 0xffff;
+                serverIp.in6_addr_union_32[3] = ((sockaddr_in*)(ainfo->ai_addr))->sin_addr.s_addr;
+            } else
+                serverIp.in6_addr_union_128 = ((sockaddr_in6*)(ainfo->ai_addr))->sin6_addr;
+
+            worker = new Client(mtu, device, serverIp, maxPolls, password, uid, gid, changeEchoId, changeEchoSeq, clientIp, ipv6 && (ainfo->ai_family == AF_INET6));
+
+            freeaddrinfo(ainfo);
         }
 
         if (!foreground)

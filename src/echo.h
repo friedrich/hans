@@ -20,22 +20,24 @@
 #ifndef ECHO_H
 #define ECHO_H
 
+#include "utility.h"
+
 #include <string>
 #include <stdint.h>
 
 class Echo
 {
 public:
-    Echo(int maxPayloadSize);
+    Echo(int maxPayloadSize, bool ICMPv6 = false);
     ~Echo();
 
     int getFd() { return fd; }
 
-    void send(int payloadLength, uint32_t realIp, bool reply, uint16_t id, uint16_t seq);
-    int receive(uint32_t &realIp, bool &reply, uint16_t &id, uint16_t &seq);
+    void send(int payloadLength, const in6_addr_union& realIp, bool reply, uint16_t id, uint16_t seq);
+    int receive(in6_addr_union &realIp, bool &reply, uint16_t &id, uint16_t &seq);
 
-    char *sendPayloadBuffer() { return sendBuffer + headerSize(); }
-    char *receivePayloadBuffer() { return receiveBuffer + headerSize(); }
+    char *sendPayloadBuffer() { return sendBuffer + sendHeaderSize(); }
+    char *receivePayloadBuffer() { return receiveBuffer + recvHeaderSize(); }
 
     static int headerSize();
 protected:
@@ -49,7 +51,10 @@ protected:
     }; // size = 8
 
     uint16_t icmpChecksum(const char *data, int length);
+    int sendHeaderSize();
+    int recvHeaderSize();
 
+    bool v6;
     int fd;
     int bufferSize;
     char *sendBuffer, *receiveBuffer;

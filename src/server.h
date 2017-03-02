@@ -27,11 +27,12 @@
 #include <queue>
 #include <vector>
 #include <set>
+#include <list>
 
 class Server : public Worker
 {
 public:
-    Server(int tunnelMtu, const char *deviceName, const char *passphrase, uint32_t network, bool answerEcho, uid_t uid, gid_t gid, int pollTimeout);
+    Server(int tunnelMtu, const char *deviceName, const char *passphrase, uint32_t network, bool answerEcho, uid_t uid, gid_t gid, int pollTimeout, bool ICMP = true, bool ICMPv6 = false);
     virtual ~Server();
 
     // change some time:
@@ -68,7 +69,8 @@ protected:
             uint16_t seq;
         };
 
-        uint32_t realIp;
+        Echo* echo;
+        in6_addr_union realIp;
         uint32_t tunnelIp;
 
         std::queue<Packet> pendingPackets;
@@ -82,10 +84,17 @@ protected:
         Auth::Challenge challenge;
     };
 
-    typedef std::vector<ClientData> ClientList;
-    typedef std::map<uint32_t, int> ClientIpMap;
+    struct in6_less {
+        bool operator() (const in6_addr_union& a, const in6_addr_union& b) const {
+            return memcmp(&a, &b, sizeof(b)) < 0;
+        }
+    };
 
-    virtual bool handleEchoData(const TunnelHeader &header, int dataLength, uint32_t realIp, bool reply, uint16_t id, uint16_t seq);
+    typedef std::list<ClientData> ClientList;
+    typedef std::map<in6_addr_union, ClientList::iterator, in6_less> ClientIpMap;
+    typedef std::map<uint32_t, ClientList::iterator> ClientTunMap;
+
+    virtual bool handleEchoData(Echo* echo, const TunnelHeader &header, int dataLength, const in6_addr_union& realIp, bool reply, uint16_t id, uint16_t seq);
     virtual void handleTunData(int dataLength, uint32_t sourceIp, uint32_t destIp);
     virtual void handleTimeout();
 
@@ -93,7 +102,7 @@ protected:
 
     void serveTun(ClientData *client);
 
-    void handleUnknownClient(const TunnelHeader &header, int dataLength, uint32_t realIp, uint16_t echoId, uint16_t echoSeq);
+    void handleUnknownClient(Echo* echo, const TunnelHeader &header, int dataLength, const in6_addr_union& realIp, uint16_t echoId, uint16_t echoSeq);
     void removeClient(ClientData *client);
 
     void sendChallenge(ClientData *client);
@@ -108,7 +117,7 @@ protected:
     void releaseTunnelIp(uint32_t tunnelIp);
 
     ClientData *getClientByTunnelIp(uint32_t ip);
-    ClientData *getClientByRealIp(uint32_t ip);
+    ClientData *getClientByRealIp(const in6_addr_union& ip);
 
     Auth auth;
 
@@ -120,7 +129,7 @@ protected:
 
     ClientList clientList;
     ClientIpMap clientRealIpMap;
-    ClientIpMap clientTunnelIpMap;
+    ClientTunMap clientTunnelIpMap;
 };
 
 #endif

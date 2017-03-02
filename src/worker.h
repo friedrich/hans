@@ -30,7 +30,7 @@
 class Worker
 {
 public:
-    Worker(int tunnelMtu, const char *deviceName, bool answerEcho, uid_t uid, gid_t gid);
+    Worker(int tunnelMtu, const char *deviceName, bool answerEcho, uid_t uid, gid_t gid, bool ICMP = true, bool ICMPv6 = false);
     virtual ~Worker();
 
     virtual void run();
@@ -69,23 +69,23 @@ protected:
         };
     }; // size = 5
 
-    virtual bool handleEchoData(const TunnelHeader &header, int dataLength, uint32_t realIp, bool reply, uint16_t id, uint16_t seq) { return true; }
+    virtual bool handleEchoData(Echo* echo, const TunnelHeader &header, int dataLength, const in6_addr_union& realIp, bool reply, uint16_t id, uint16_t seq) { return true; }
     virtual void handleTunData(int dataLength, uint32_t sourceIp, uint32_t destIp) { } // to echoSendPayloadBuffer
     virtual void handleTimeout() { }
 
-    void sendEcho(const TunnelHeader::Magic &magic, int type, int length, uint32_t realIp, bool reply, uint16_t id, uint16_t seq);
-    void sendToTun(int length); // from echoReceivePayloadBuffer
+    void sendEcho(Echo* echo, const TunnelHeader::Magic &magic, int type, int length, const in6_addr_union& realIp, bool reply, uint16_t id, uint16_t seq);
+    void sendToTun(Echo* echo, int length); // from echoReceivePayloadBuffer
 
     void setTimeout(Time delta);
 
-    char *echoSendPayloadBuffer() { return echo->sendPayloadBuffer() + sizeof(TunnelHeader); }
-    char *echoReceivePayloadBuffer() { return echo->receivePayloadBuffer() + sizeof(TunnelHeader); }
+    char *echoSendPayloadBuffer(Echo* echo) { return echo->sendPayloadBuffer() + sizeof(TunnelHeader); }
+    char *echoReceivePayloadBuffer(Echo* echo) { return echo->receivePayloadBuffer() + sizeof(TunnelHeader); }
 
     int payloadBufferSize() { return tunnelMtu; }
 
     void dropPrivileges();
 
-    Echo *echo;
+    Echo *echo[2];
     Tun *tun;
     bool alive;
     bool answerEcho;
