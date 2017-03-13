@@ -30,7 +30,7 @@
 class Worker
 {
 public:
-    Worker(int tunnelMtu, const char *deviceName, bool answerEcho, uid_t uid, gid_t gid, bool ICMP = true, bool ICMPv6 = false);
+    Worker(int tunnelMtu, const char *deviceName, bool answerEcho, bool trackEchoId, uid_t uid, gid_t gid, bool ICMP = true, bool ICMPv6 = false);
     virtual ~Worker();
 
     virtual void run();
@@ -89,6 +89,7 @@ protected:
     Tun *tun;
     bool alive;
     bool answerEcho;
+    bool trackEchoId;
     int tunnelMtu;
     int maxTunnelHeaderSize;
     uid_t uid;

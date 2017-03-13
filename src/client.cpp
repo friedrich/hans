@@ -34,8 +34,8 @@ const Worker::TunnelHeader::Magic Client::magic("hanc");
 
 Client::Client(int tunnelMtu, const char *deviceName, const in6_addr_union& serverIp,
                int maxPolls, const char *passphrase, uid_t uid, gid_t gid,
-               bool changeEchoId, bool changeEchoSeq, uint32_t desiredIp, bool ICMPv6)
-: Worker(tunnelMtu, deviceName, false, uid, gid, !ICMPv6, ICMPv6), auth(passphrase)
+               bool trackEchoId, bool changeEchoId, bool changeEchoSeq, uint32_t desiredIp, bool ICMPv6)
+: Worker(tunnelMtu, deviceName, false, trackEchoId, uid, gid, !ICMPv6, ICMPv6), auth(passphrase)
 {
     this->serverIp = serverIp;
     this->clientIp = INADDR_NONE;
@@ -101,6 +101,9 @@ bool Client::handleEchoData(Echo* echo, const TunnelHeader &header, int dataLeng
         return false;
 
     if (!reply)
+        return false;
+
+    if (trackEchoId && id != nextEchoId)
         return false;
 
     if (header.magic != Server::magic)

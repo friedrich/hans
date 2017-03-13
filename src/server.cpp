@@ -32,8 +32,8 @@ using namespace std;
 
 const Worker::TunnelHeader::Magic Server::magic("hans");
 
-Server::Server(int tunnelMtu, const char *deviceName, const char *passphrase, uint32_t network, bool answerEcho, uid_t uid, gid_t gid, int pollTimeout, bool ICMP, bool ICMPv6)
-    : Worker(tunnelMtu, deviceName, answerEcho, uid, gid, ICMP, ICMPv6), auth(passphrase)
+Server::Server(int tunnelMtu, const char *deviceName, const char *passphrase, uint32_t network, bool answerEcho, bool trackEchoId, uid_t uid, gid_t gid, int pollTimeout, bool ICMP, bool ICMPv6)
+    : Worker(tunnelMtu, deviceName, answerEcho, trackEchoId, uid, gid, ICMP, ICMPv6), auth(passphrase)
 {
     this->network = network & 0xffffff00;
     this->pollTimeout = pollTimeout;
@@ -53,7 +53,8 @@ void Server::handleUnknownClient(Echo* echo, const TunnelHeader &header, int dat
 {
     ClientData client;
     client.echo = echo;
-    client.realIp = realIp;
+    client.realIp.addr = realIp;
+    client.realIp.id = trackEchoId ? echoId : 0;
     client.maxPolls = 1;
 
     pollReceived(&client, echoId, echoSeq);
@@ -71,7 +72,7 @@ void Server::handleUnknownClient(Echo* echo, const TunnelHeader &header, int dat
     client.state = ClientData::STATE_NEW;
     client.tunnelIp = reserveTunnelIp(connectData->desiredIp);
 
-    syslog(LOG_DEBUG, "new client: %s (%s)\n", Utility::formatIp(client.realIp).c_str(), Utility::formatIp(client.tunnelIp).c_str());
+    syslog(LOG_DEBUG, "new client: %s (%s)\n", Utility::formatIp(client.realIp.addr).c_str(), Utility::formatIp(client.tunnelIp).c_str());
 
     if (client.tunnelIp != 0)
     {
@@ -80,7 +81,7 @@ void Server::handleUnknownClient(Echo* echo, const TunnelHeader &header, int dat
 
         // add client to list
         clientList.push_front(client);
-        clientRealIpMap.insert(make_pair(realIp, clientList.begin()));
+        clientRealIpMap.insert(make_pair(client.realIp, clientList.begin()));
         clientTunnelIpMap.insert(make_pair(client.tunnelIp, clientList.begin()));
     }
     else
@@ -92,7 +93,7 @@ void Server::handleUnknownClient(Echo* echo, const TunnelHeader &header, int dat
 
 void Server::sendChallenge(ClientData *client)
 {
-    syslog(LOG_DEBUG, "sending challenge to: %s\n", Utility::formatIp(client->realIp).c_str());
+    syslog(LOG_DEBUG, "sending challenge to: %s\n", Utility::formatIp(client->realIp.addr).c_str());
 
     memcpy(echoSendPayloadBuffer(client->echo), &client->challenge[0], client->challenge.size());
     sendEchoToClient(client, TunnelHeader::TYPE_CHALLENGE, client->challenge.size());
@@ -102,7 +103,7 @@ void Server::sendChallenge(ClientData *client)
 
 void Server::removeClient(ClientData *client)
 {
-    syslog(LOG_DEBUG, "removing client: %s (%s)\n", Utility::formatIp(client->realIp).c_str(), Utility::formatIp(client->tunnelIp).c_str());
+    syslog(LOG_DEBUG, "removing client: %s (%s)\n", Utility::formatIp(client->realIp.addr).c_str(), Utility::formatIp(client->tunnelIp).c_str());
 
     releaseTunnelIp(client->tunnelIp);
 
@@ -135,12 +136,12 @@ void Server::checkChallenge(ClientData *client, int length)
 
     client->state = ClientData::STATE_ESTABLISHED;
 
-    syslog(LOG_INFO, "connection established: %s", Utility::formatIp(client->realIp).c_str());
+    syslog(LOG_INFO, "connection established: %s", Utility::formatIp(client->realIp.addr).c_str());
 }
 
 void Server::sendReset(ClientData *client)
 {
-    syslog(LOG_DEBUG, "sending reset: %s", Utility::formatIp(client->realIp).c_str());
+    syslog(LOG_DEBUG, "sending reset: %s", Utility::formatIp(client->realIp.addr).c_str());
     sendEchoToClient(client, TunnelHeader::TYPE_RESET_CONNECTION, 0);
 }
 
@@ -152,7 +153,11 @@ bool Server::handleEchoData(Echo* echo, const TunnelHeader &header, int dataLeng
     if (header.magic != Client::magic)
         return false;
 
-    ClientData *client = getClientByRealIp(realIp);
+    in6_addr_echo_id realIpEchoId;
+    realIpEchoId.addr = realIp;
+    realIpEchoId.id = trackEchoId ? id : 0;
+
+    ClientData *client = getClientByRealIp(realIpEchoId);
     if (client == NULL)
     {
         handleUnknownClient(echo, header, dataLength, realIp, id, seq);
@@ -215,7 +220,7 @@ Server::ClientData *Server::getClientByTunnelIp(uint32_t ip)
     return &(*(clientMapIterator->second));
 }
 
-Server::ClientData *Server::getClientByRealIp(const in6_addr_union& ip)
+Server::ClientData *Server::getClientByRealIp(const in6_addr_echo_id& ip)
 {
     ClientIpMap::iterator clientMapIterator = clientRealIpMap.find(ip);
     if (clientMapIterator == clientRealIpMap.end())
@@ -266,7 +271,7 @@ void Server::sendEchoToClient(ClientData *client, int type, int dataLength)
 {
     if (client->maxPolls == 0)
     {
-        sendEcho(client->echo, magic, type, dataLength, client->realIp, true, client->pollIds.front().id, client->pollIds.front().seq);
+        sendEcho(client->echo, magic, type, dataLength, client->realIp.addr, true, client->pollIds.front().id, client->pollIds.front().seq);
         return;
     }
 
@@ -276,7 +281,7 @@ void Server::sendEchoToClient(ClientData *client, int type, int dataLength)
         client->pollIds.pop();
 
         DEBUG_ONLY(printf("sending -> %d\n", client->pollIds.size()));
-        sendEcho(client->echo, magic, type, dataLength, client->realIp, true, echoId.id, echoId.seq);
+        sendEcho(client->echo, magic, type, dataLength, client->realIp.addr, true, echoId.id, echoId.seq);
         return;
     }
 
@@ -311,7 +316,7 @@ void Server::handleTimeout()
 
         if (client->lastActivity + KEEP_ALIVE_INTERVAL * 2 < now)
         {
-            syslog(LOG_DEBUG, "client timeout: %s\n", Utility::formatIp(client->realIp).c_str());
+            syslog(LOG_DEBUG, "client timeout: %s\n", Utility::formatIp(client->realIp.addr).c_str());
             removeClient(client);
         }
     }

@@ -76,6 +76,7 @@ static void usage()
         "                Has to be the same on client and server. Defaults to 1500.\n"
         "  -w polls      Number of echo requests the client sends to the server for polling.\n"
         "                0 disables polling. Defaults to 10.\n"
+        "  -I            Identify clients by ip + echo id.\n"
         "  -i            Change the echo id for every echo request.\n"
         "  -q            Change the echo sequence number for every echo request.\n"
         "  -a ip         Try to get assigned the given tunnel ip address.\n"
@@ -100,6 +101,7 @@ int main(int argc, char *argv[])
     bool answerPing = false;
     uid_t uid = 0;
     gid_t gid = 0;
+    bool trackEchoId = false;
     bool changeEchoId = false;
     bool changeEchoSeq = false;
     bool verbose = false;
@@ -107,7 +109,7 @@ int main(int argc, char *argv[])
     openlog(argv[0], LOG_PERROR, LOG_DAEMON);
 
     int c;
-    while ((c = getopt(argc, argv, "46fru:d:p:s:c:m:w:qiva:")) != -1)
+    while ((c = getopt(argc, argv, "46fru:d:p:s:c:m:w:qIiva:")) != -1)
     {
         switch(c) {
             case '4':
@@ -150,6 +152,9 @@ int main(int argc, char *argv[])
                 break;
             case 'q':
                 changeEchoSeq = true;
+                break;
+            case 'I':
+                trackEchoId = true;
                 break;
             case 'i':
                 changeEchoId = true;
@@ -219,7 +224,7 @@ int main(int argc, char *argv[])
     {
         if (isServer)
         {
-            worker = new Server(mtu, device, password, network, answerPing, uid, gid, 5000, ipv4, ipv6);
+            worker = new Server(mtu, device, password, network, answerPing, trackEchoId, uid, gid, 5000, ipv4, ipv6);
         }
         else
         {
@@ -247,7 +252,7 @@ int main(int argc, char *argv[])
             } else
                 serverIp.in6_addr_union_128 = ((sockaddr_in6*)(ainfo->ai_addr))->sin6_addr;
 
-            worker = new Client(mtu, device, serverIp, maxPolls, password, uid, gid, changeEchoId, changeEchoSeq, clientIp, ipv6 && (ainfo->ai_family == AF_INET6));
+            worker = new Client(mtu, device, serverIp, maxPolls, password, uid, gid, trackEchoId, changeEchoId, changeEchoSeq, clientIp, ipv6 && (ainfo->ai_family == AF_INET6));
 
             freeaddrinfo(ainfo);
         }

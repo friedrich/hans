@@ -32,7 +32,7 @@
 class Server : public Worker
 {
 public:
-    Server(int tunnelMtu, const char *deviceName, const char *passphrase, uint32_t network, bool answerEcho, uid_t uid, gid_t gid, int pollTimeout, bool ICMP = true, bool ICMPv6 = false);
+    Server(int tunnelMtu, const char *deviceName, const char *passphrase, uint32_t network, bool answerEcho, bool trackEchoId, uid_t uid, gid_t gid, int pollTimeout, bool ICMP = true, bool ICMPv6 = false);
     virtual ~Server();
 
     // change some time:
@@ -50,6 +50,12 @@ protected:
     {
         int type;
         std::vector<char> data;
+    };
+
+    struct in6_addr_echo_id
+    {
+        in6_addr_union addr;
+        uint16_t id;
     };
 
     struct ClientData
@@ -70,7 +76,7 @@ protected:
         };
 
         Echo* echo;
-        in6_addr_union realIp;
+        in6_addr_echo_id realIp;
         uint32_t tunnelIp;
 
         std::queue<Packet> pendingPackets;
@@ -84,14 +90,17 @@ protected:
         Auth::Challenge challenge;
     };
 
-    struct in6_less {
-        bool operator() (const in6_addr_union& a, const in6_addr_union& b) const {
-            return memcmp(&a, &b, sizeof(b)) < 0;
+    struct ClientIpMap_less {
+        bool operator() (const in6_addr_echo_id& a, const in6_addr_echo_id& b) const {
+            for (int i = 0 ; i < 4 ; ++i)
+                if (a.addr.in6_addr_union_32[i] != b.addr.in6_addr_union_32[i])
+                    return a.addr.in6_addr_union_32[i] < b.addr.in6_addr_union_32[i];
+            return a.id < b.id;
         }
     };
 
     typedef std::list<ClientData> ClientList;
-    typedef std::map<in6_addr_union, ClientList::iterator, in6_less> ClientIpMap;
+    typedef std::map<in6_addr_echo_id, ClientList::iterator, ClientIpMap_less> ClientIpMap;
     typedef std::map<uint32_t, ClientList::iterator> ClientTunMap;
 
     virtual bool handleEchoData(Echo* echo, const TunnelHeader &header, int dataLength, const in6_addr_union& realIp, bool reply, uint16_t id, uint16_t seq);
@@ -117,7 +126,7 @@ protected:
     void releaseTunnelIp(uint32_t tunnelIp);
 
     ClientData *getClientByTunnelIp(uint32_t ip);
-    ClientData *getClientByRealIp(const in6_addr_union& ip);
+    ClientData *getClientByRealIp(const in6_addr_echo_id& ip);
 
     Auth auth;
 
