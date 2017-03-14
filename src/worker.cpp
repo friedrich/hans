@@ -47,11 +47,12 @@ bool Worker::TunnelHeader::Magic::operator!=(const Magic &other) const
     return memcmp(data, other.data, sizeof(data)) != 0;
 }
 
-Worker::Worker(int tunnelMtu, const char *deviceName, bool answerEcho, bool trackEchoId, uid_t uid, gid_t gid, bool ICMP, bool ICMPv6)
+Worker::Worker(int tunnelMtu, const char *deviceName, bool answerEcho, bool trackEchoId, bool trackEchoSeq, uid_t uid, gid_t gid, bool ICMP, bool ICMPv6)
 {
     this->tunnelMtu = tunnelMtu;
     this->answerEcho = answerEcho;
     this->trackEchoId = trackEchoId;
+    this->trackEchoSeq = trackEchoSeq;
     this->uid = uid;
     this->gid = gid;
     this->privilegesDropped = false;

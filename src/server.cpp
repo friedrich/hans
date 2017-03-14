@@ -32,8 +32,8 @@ using namespace std;
 
 const Worker::TunnelHeader::Magic Server::magic("hans");
 
-Server::Server(int tunnelMtu, const char *deviceName, const char *passphrase, uint32_t network, bool answerEcho, bool trackEchoId, uid_t uid, gid_t gid, int pollTimeout, bool ICMP, bool ICMPv6)
-    : Worker(tunnelMtu, deviceName, answerEcho, trackEchoId, uid, gid, ICMP, ICMPv6), auth(passphrase)
+Server::Server(int tunnelMtu, const char *deviceName, const char *passphrase, uint32_t network, bool answerEcho, bool trackEchoId, bool trackEchoSeq, uid_t uid, gid_t gid, int pollTimeout, bool ICMP, bool ICMPv6)
+    : Worker(tunnelMtu, deviceName, answerEcho, trackEchoId, trackEchoSeq, uid, gid, ICMP, ICMPv6), auth(passphrase)
 {
     this->network = network & 0xffffff00;
     this->pollTimeout = pollTimeout;
@@ -54,7 +54,7 @@ void Server::handleUnknownClient(Echo* echo, const TunnelHeader &header, int dat
     ClientData client;
     client.echo = echo;
     client.realIp.addr = realIp;
-    client.realIp.id = trackEchoId ? echoId : 0;
+    client.realIp.id = ( trackEchoId ? echoId : ( trackEchoSeq ? echoSeq : 0 ) );
     client.maxPolls = 1;
 
     pollReceived(&client, echoId, echoSeq);
@@ -155,7 +155,7 @@ bool Server::handleEchoData(Echo* echo, const TunnelHeader &header, int dataLeng
 
     in6_addr_echo_id realIpEchoId;
     realIpEchoId.addr = realIp;
-    realIpEchoId.id = trackEchoId ? id : 0;
+    realIpEchoId.id = ( trackEchoId ? id : ( trackEchoSeq ? seq : 0 ) );
 
     ClientData *client = getClientByRealIp(realIpEchoId);
     if (client == NULL)

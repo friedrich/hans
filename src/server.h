@@ -32,7 +32,7 @@
 class Server : public Worker
 {
 public:
-    Server(int tunnelMtu, const char *deviceName, const char *passphrase, uint32_t network, bool answerEcho, bool trackEchoId, uid_t uid, gid_t gid, int pollTimeout, bool ICMP = true, bool ICMPv6 = false);
+    Server(int tunnelMtu, const char *deviceName, const char *passphrase, uint32_t network, bool answerEcho, bool trackEchoId, bool trackEchoSeq, uid_t uid, gid_t gid, int pollTimeout, bool ICMP = true, bool ICMPv6 = false);
     virtual ~Server();
 
     // change some time:
