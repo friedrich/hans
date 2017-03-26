@@ -120,6 +120,11 @@ bool Client::handleEchoData(Echo* echo, const TunnelHeader &header, int dataLeng
             sendConnectionRequest();
             return true;
         case TunnelHeader::TYPE_SERVER_FULL:
+            if (state == STATE_CHALLENGE_RESPONSE_SENT)
+            {
+                syslog(LOG_DEBUG, "server almost full");
+                return true;
+            }
             if (state == STATE_CONNECTION_REQUEST_SENT)
             {
                 throw Exception("server full");
@@ -130,6 +135,11 @@ bool Client::handleEchoData(Echo* echo, const TunnelHeader &header, int dataLeng
             {
                 syslog(LOG_DEBUG, "challenge received");
                 sendChallengeResponse(dataLength);
+                return true;
+            }
+            if (state == STATE_CHALLENGE_RESPONSE_SENT)
+            {
+                syslog(LOG_DEBUG, "duplicate challenge received");
                 return true;
             }
             break;

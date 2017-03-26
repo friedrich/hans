@@ -111,7 +111,7 @@ protected:
 
     void serveTun(ClientData *client);
 
-    void handleUnknownClient(Echo* echo, const TunnelHeader &header, int dataLength, const in6_addr_union& realIp, uint16_t echoId, uint16_t echoSeq);
+    void handleUnknownClient(Echo* echo, const TunnelHeader &header, int dataLength, const in6_addr_echo_id& realIp, uint16_t echoId, uint16_t echoSeq, const Auth::Challenge& challenge);
     void removeClient(ClientData *client);
 
     void sendChallenge(ClientData *client);

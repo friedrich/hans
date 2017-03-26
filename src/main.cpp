@@ -193,7 +193,6 @@ int main(int argc, char *argv[])
     if ((isClient == isServer) ||
         (isServer && network == INADDR_NONE) ||
         (maxPolls < 0 || maxPolls > 255) ||
-        (isServer && (trackEchoSeq && trackEchoId)) ||
         (isServer && (changeEchoSeq || changeEchoId)))
     {
         usage();
