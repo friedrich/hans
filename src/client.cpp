@@ -57,6 +57,7 @@ Client::~Client()
 void Client::sendConnectionRequest()
 {
     Server::ClientConnectData *connectData = (Server::ClientConnectData *)echoSendPayloadBuffer(echo[0] ? echo[0] : echo[1]);
+    memset(connectData, 0, sizeof(Server::ClientConnectData));
     connectData->maxPolls = maxPolls;
     connectData->desiredIp = desiredIp;
 

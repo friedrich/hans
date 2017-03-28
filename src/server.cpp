@@ -337,14 +337,14 @@ void Server::handleTimeout()
         ClientData *client = &(*i);
         ++i;
 
-        if (client->lastActivity + KEEP_ALIVE_INTERVAL * 2 < now)
+        if (client->state != ClientData::STATE_ESTABLISHED || client->lastActivity + KEEP_ALIVE_INTERVAL * 2 < now)
         {
             syslog(LOG_DEBUG, "client timeout: %s\n", Utility::formatIp(client->realIp.addr).c_str());
             removeClient(client);
         }
     }
 
-    setTimeout(KEEP_ALIVE_INTERVAL);
+    setTimeout(CHALLENGE_INTERVAL + Utility::rand() % CHALLENGE_INTERVAL);
 }
 
 uint32_t Server::reserveTunnelIp(uint32_t desiredIp)
