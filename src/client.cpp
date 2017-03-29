@@ -33,7 +33,7 @@ using namespace std;
 const Worker::TunnelHeader::Magic Client::magic("hanc");
 
 Client::Client(int tunnelMtu, const char *deviceName, const in6_addr_union& serverIp,
-               int maxPolls, const char *passphrase, uid_t uid, gid_t gid,
+               int maxPolls, int pollTimeoutNr, const char *passphrase, uid_t uid, gid_t gid,
                bool trackEchoId, bool trackEchoSeq, bool changeEchoId, bool changeEchoSeq, uint32_t desiredIp, bool ICMPv6)
 : Worker(tunnelMtu, deviceName, false, trackEchoId, trackEchoSeq, uid, gid, !ICMPv6, ICMPv6), auth(passphrase)
 {
@@ -41,6 +41,7 @@ Client::Client(int tunnelMtu, const char *deviceName, const in6_addr_union& serv
     this->clientIp = INADDR_NONE;
     this->desiredIp = desiredIp;
     this->maxPolls = maxPolls;
+    this->pollTimeoutNr = pollTimeoutNr;
     this->nextEchoId = Utility::rand();
     this->changeEchoId = changeEchoId;
     this->changeEchoSeq = changeEchoSeq;
@@ -216,7 +217,7 @@ void Client::startPolling()
     {
         for (int i = 0; i < maxPolls; i++)
             sendEchoToServer(TunnelHeader::TYPE_POLL, 0);
-        setTimeout(POLL_INTERVAL);
+        setTimeout(pollTimeoutNr);
     }
 }
 
@@ -253,7 +254,7 @@ void Client::handleTimeout()
 
         case STATE_ESTABLISHED:
             sendEchoToServer(TunnelHeader::TYPE_POLL, 0);
-            setTimeout(maxPolls == 0 ? KEEP_ALIVE_INTERVAL : POLL_INTERVAL);
+            setTimeout(maxPolls == 0 ? KEEP_ALIVE_INTERVAL : pollTimeoutNr);
             break;
         case STATE_CLOSED:
             break;

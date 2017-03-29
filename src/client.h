@@ -29,7 +29,7 @@ class Client : public Worker
 {
 public:
     Client(int tunnelMtu, const char *deviceName, const in6_addr_union& serverIp,
-           int maxPolls, const char *passphrase, uid_t uid, gid_t gid,
+           int maxPolls, int pollTimeoutNr, const char *passphrase, uid_t uid, gid_t gid,
            bool trackEchoId, bool trackEchoSeq, bool changeEchoId, bool changeEchoSeq, uint32_t desiredIp, bool ICMPv6 = false);
     virtual ~Client();
 
