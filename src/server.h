@@ -26,6 +26,7 @@
 #include <map>
 #include <queue>
 #include <vector>
+#include <list>
 #include <set>
 
 class Server : public Worker
@@ -82,8 +83,8 @@ protected:
         Auth::Challenge challenge;
     };
 
-    typedef std::vector<ClientData> ClientList;
-    typedef std::map<uint32_t, int> ClientIpMap;
+    typedef std::list<ClientData> ClientList;
+    typedef std::map<uint32_t, ClientList::iterator> ClientIpMap;
 
     virtual bool handleEchoData(const TunnelHeader &header, int dataLength, uint32_t realIp, bool reply, uint16_t id, uint16_t seq);
     virtual void handleTunData(int dataLength, uint32_t sourceIp, uint32_t destIp);

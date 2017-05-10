@@ -78,9 +78,9 @@ void Server::handleUnknownClient(const TunnelHeader &header, int dataLength, uin
         sendChallenge(&client);
 
         // add client to list
-        clientList.push_back(client);
-        clientRealIpMap[realIp] = clientList.size() - 1;
-        clientTunnelIpMap[client.tunnelIp] = clientList.size() - 1;
+        clientList.push_front(client);
+        clientRealIpMap[realIp] = clientList.begin();
+        clientTunnelIpMap[client.tunnelIp] = clientList.begin();
     }
     else
     {
@@ -105,12 +105,12 @@ void Server::removeClient(ClientData *client)
 
     releaseTunnelIp(client->tunnelIp);
 
-    int nr = clientRealIpMap[client->realIp];
+    ClientList::iterator it = clientRealIpMap[client->realIp];
 
     clientRealIpMap.erase(client->realIp);
     clientTunnelIpMap.erase(client->tunnelIp);
 
-    clientList.erase(clientList.begin() + nr);
+    clientList.erase(it);
 }
 
 void Server::checkChallenge(ClientData *client, int length)
@@ -207,20 +207,20 @@ bool Server::handleEchoData(const TunnelHeader &header, int dataLength, uint32_t
 
 Server::ClientData *Server::getClientByTunnelIp(uint32_t ip)
 {
-    ClientIpMap::iterator clientMapIterator = clientTunnelIpMap.find(ip);
-    if (clientMapIterator == clientTunnelIpMap.end())
+    ClientIpMap::iterator it = clientTunnelIpMap.find(ip);
+    if (it == clientTunnelIpMap.end())
         return NULL;
 
-    return &clientList[clientMapIterator->second];
+    return &*it->second;
 }
 
 Server::ClientData *Server::getClientByRealIp(uint32_t ip)
 {
-    ClientIpMap::iterator clientMapIterator = clientRealIpMap.find(ip);
-    if (clientMapIterator == clientRealIpMap.end())
+    ClientIpMap::iterator it = clientRealIpMap.find(ip);
+    if (it == clientRealIpMap.end())
         return NULL;
 
-    return &clientList[clientMapIterator->second];
+    return &*it->second;
 }
 
 void Server::handleTunData(int dataLength, uint32_t sourceIp, uint32_t destIp)
@@ -301,15 +301,16 @@ void Server::releaseTunnelIp(uint32_t tunnelIp)
 
 void Server::handleTimeout()
 {
-    for (int i = 0; i < clientList.size(); i++)
+    ClientList::iterator it = clientList.begin();
+    while (it != clientList.end())
     {
-        ClientData *client = &clientList[i];
+        ClientData &client = *it++;
 
-        if (client->lastActivity + KEEP_ALIVE_INTERVAL * 2 < now)
+        if (client.lastActivity + KEEP_ALIVE_INTERVAL * 2 < now)
         {
-            syslog(LOG_DEBUG, "client timeout: %s\n", Utility::formatIp(client->realIp).c_str());
-            removeClient(client);
-            i--;
+            syslog(LOG_DEBUG, "client timeout: %s\n",
+                   Utility::formatIp(client.realIp).data());
+            removeClient(&client);
         }
     }
 
