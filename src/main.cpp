@@ -36,6 +36,10 @@
 #include <sys/socket.h>
 #include <signal.h>
 
+#ifndef AI_V4MAPPED // Not supported on OpenBSD 6.0
+#define AI_V4MAPPED 0
+#endif
+
 static Worker *worker = NULL;
 
 static void sig_term_handler(int)
@@ -208,18 +212,21 @@ int main(int argc, char *argv[])
         }
         else
         {
-            uint32_t serverIp = inet_addr(serverName);
-            if (serverIp == INADDR_NONE)
-            {
-                struct hostent* he = gethostbyname(serverName);
-                if (!he)
-                {
-                    syslog(LOG_ERR, "gethostbyname: %s", hstrerror(h_errno));
-                    return 1;
-                }
+            struct addrinfo hints = {0};
+            struct addrinfo *res = NULL;
 
-                serverIp = *(uint32_t *)he->h_addr;
+            hints.ai_family = AF_INET;
+            hints.ai_flags = AI_V4MAPPED | AI_ADDRCONFIG;
+
+            int err = getaddrinfo(serverName, NULL, &hints, &res);
+            if (err)
+            {
+                syslog(LOG_ERR, "getaddrinfo: %s", gai_strerror(err));
+                return 1;
             }
+
+            sockaddr_in *sockaddr = reinterpret_cast<sockaddr_in *>(res->ai_addr);
+            uint32_t serverIp = sockaddr->sin_addr.s_addr;
 
             worker = new Client(mtu, device, ntohl(serverIp), maxPolls, password, uid, gid, changeEchoId, changeEchoSeq, clientIp);
         }
