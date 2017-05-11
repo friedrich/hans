@@ -27,9 +27,10 @@
 
 class Client : public Worker
 {
+
 public:
-    Client(int tunnelMtu, const char *deviceName, uint32_t serverIp,
-           int maxPolls, const char *passphrase, uid_t uid, gid_t gid,
+    Client(int tunnelMtu, const std::string *deviceName, uint32_t serverIp,
+           int maxPolls, const std::string &passphrase, uid_t uid, gid_t gid,
            bool changeEchoId, bool changeEchoSeq, uint32_t desiredIp);
     virtual ~Client();
 
@@ -53,7 +54,7 @@ protected:
 
     void startPolling();
 
-    void sendEchoToServer(int type, int dataLength);
+    void sendEchoToServer(Worker::TunnelHeader::Type type, int dataLength);
     void sendChallengeResponse(int dataLength);
     void sendConnectionRequest();
 

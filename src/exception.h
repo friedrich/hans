@@ -22,11 +22,10 @@
 class Exception
 {
 public:
-    Exception(const char *msg);
-    Exception(const std::string msg);
-    Exception(const char *msg, bool appendSystemError);
+    Exception(const std::string &msg);
+    Exception(const std::string &msg, bool appendSystemError);
 
-    const char *errorMessage() const { return msg.c_str(); }
+    const std::string &errorMessage() const { return msg; }
 protected:
     std::string msg;
 };

@@ -21,7 +21,7 @@
 #include "server.h"
 #include "exception.h"
 
-#include <stdio.h>
+#include <iostream>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/types.h>
@@ -35,10 +35,13 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <signal.h>
+#include <memory>
 
 #ifndef AI_V4MAPPED // Not supported on OpenBSD 6.0
 #define AI_V4MAPPED 0
 #endif
+
+using std::string;
 
 static Worker *worker = NULL;
 
@@ -58,7 +61,7 @@ static void sig_int_handler(int)
 
 static void usage()
 {
-    printf(
+    std::cerr <<
         "Hans - IP over ICMP version 1.0\n\n"
         "RUN AS CLIENT\n"
         "  hans -c server [-fv] [-p passphrase] [-u user] [-d tun_device]\n"
@@ -86,16 +89,15 @@ static void usage()
         "  -q            Change echo sequence number on every echo request. May help with\n"
         "                buggy routers. May impact performance with others.\n"
         "  -f            Run in foreground.\n"
-        "  -v            Print debug information.\n"
-    );
+        "  -v            Print debug information.\n";
 }
 
 int main(int argc, char *argv[])
 {
-    const char *serverName;
-    const char *userName = NULL;
-    const char *password = "";
-    const char *device = NULL;
+    string serverName;
+    string userName;
+    string passphrase;
+    string device;
     bool isServer = false;
     bool isClient = false;
     bool foreground = false;
@@ -126,7 +128,7 @@ int main(int argc, char *argv[])
                 device = optarg;
                 break;
             case 'p':
-                password = strdup(optarg);
+                passphrase = optarg;
                 memset(optarg, 0, strlen(optarg));
                 break;
             case 'c':
@@ -137,7 +139,7 @@ int main(int argc, char *argv[])
                 isServer = true;
                 network = ntohl(inet_addr(optarg));
                 if (network == INADDR_NONE)
-                    printf("invalid network\n");
+                    std::cerr << "invalid network\n";
                 break;
             case 'm':
                 mtu = atoi(optarg);
@@ -170,8 +172,9 @@ int main(int argc, char *argv[])
 
     if (mtu < 68)
     {
-        // RFC 791: Every internet module must be able to forward a datagram of 68 octets without further fragmentation.
-        printf("mtu too small\n");
+        // RFC 791: Every internet module must be able to forward a datagram of
+        // 68 octets without further fragmentation.
+        std::cerr << "mtu too small\n";
         return 1;
     }
 
@@ -184,13 +187,13 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    if (userName != NULL)
+    if (!userName.empty())
     {
 #ifdef WIN32
         syslog(LOG_ERR, "dropping privileges is not supported on Windows");
         return 1;
 #endif
-        passwd *pw = getpwnam(userName);
+        passwd *pw = getpwnam(userName.data());
 
         if (pw != NULL)
         {
@@ -214,7 +217,8 @@ int main(int argc, char *argv[])
     {
         if (isServer)
         {
-            worker = new Server(mtu, device, password, network, answerPing, uid, gid, 5000);
+            worker = new Server(mtu, device.empty() ? NULL : &device, passphrase,
+                                network, answerPing, uid, gid, 5000);
         }
         else
         {
@@ -224,7 +228,7 @@ int main(int argc, char *argv[])
             hints.ai_family = AF_INET;
             hints.ai_flags = AI_V4MAPPED | AI_ADDRCONFIG;
 
-            int err = getaddrinfo(serverName, NULL, &hints, &res);
+            int err = getaddrinfo(serverName.data(), NULL, &hints, &res);
             if (err)
             {
                 syslog(LOG_ERR, "getaddrinfo: %s", gai_strerror(err));
@@ -234,7 +238,9 @@ int main(int argc, char *argv[])
             sockaddr_in *sockaddr = reinterpret_cast<sockaddr_in *>(res->ai_addr);
             uint32_t serverIp = sockaddr->sin_addr.s_addr;
 
-            worker = new Client(mtu, device, ntohl(serverIp), maxPolls, password, uid, gid, changeEchoId, changeEchoSeq, clientIp);
+            worker = new Client(mtu, device.empty() ? NULL : &device,
+                                ntohl(serverIp), maxPolls, passphrase, uid, gid,
+                                changeEchoId, changeEchoSeq, clientIp);
 
             freeaddrinfo(res);
         }
@@ -249,7 +255,7 @@ int main(int argc, char *argv[])
     }
     catch (Exception e)
     {
-        syslog(LOG_ERR, "%s", e.errorMessage());
+        syslog(LOG_ERR, "%s", e.errorMessage().data());
         delete worker;
         return 1;
     }

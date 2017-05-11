@@ -28,27 +28,27 @@
 #include <vector>
 #include <list>
 #include <set>
+#include <string>
 
 class Server : public Worker
 {
 public:
-    Server(int tunnelMtu, const char *deviceName, const char *passphrase, uint32_t network, bool answerEcho, uid_t uid, gid_t gid, int pollTimeout);
+    Server(int tunnelMtu, const std::string *deviceName, const std::string &passphrase,
+           uint32_t network, bool answerEcho, uid_t uid, gid_t gid, int pollTimeout);
     virtual ~Server();
 
-    // change some time:
-    // struct __attribute__ ((__packed__)) ClientConnectData
     struct ClientConnectData
     {
         uint8_t maxPolls;
         uint32_t desiredIp;
     };
 
-    static const Worker::TunnelHeader::Magic magic;
+    static const TunnelHeader::Magic magic;
 
 protected:
     struct Packet
     {
-        int type;
+        TunnelHeader::Type type;
         std::vector<char> data;
     };
 
@@ -101,7 +101,7 @@ protected:
     void checkChallenge(ClientData *client, int dataLength);
     void sendReset(ClientData *client);
 
-    void sendEchoToClient(ClientData *client, int type, int dataLength);
+    void sendEchoToClient(ClientData *client, TunnelHeader::Type type, int dataLength);
 
     void pollReceived(ClientData *client, uint16_t echoId, uint16_t echoSeq);
 

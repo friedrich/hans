@@ -21,6 +21,7 @@
 #define ECHO_H
 
 #include <string>
+#include <vector>
 #include <stdint.h>
 
 class Echo
@@ -34,8 +35,8 @@ public:
     void send(int payloadLength, uint32_t realIp, bool reply, uint16_t id, uint16_t seq);
     int receive(uint32_t &realIp, bool &reply, uint16_t &id, uint16_t &seq);
 
-    char *sendPayloadBuffer() { return sendBuffer + headerSize(); }
-    char *receivePayloadBuffer() { return receiveBuffer + headerSize(); }
+    char *sendPayloadBuffer();
+    char *receivePayloadBuffer();
 
     static int headerSize();
 protected:
@@ -52,7 +53,8 @@ protected:
 
     int fd;
     int bufferSize;
-    char *sendBuffer, *receiveBuffer;
+    std::vector<char> sendBuffer;
+    std::vector<char> receiveBuffer;
 };
 
 #endif

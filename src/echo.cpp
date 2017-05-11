@@ -42,16 +42,13 @@ Echo::Echo(int maxPayloadSize)
         throw Exception("creating icmp socket", true);
 
     bufferSize = maxPayloadSize + headerSize();
-    sendBuffer = new char[bufferSize];
-    receiveBuffer = new char[bufferSize];
+    sendBuffer.resize(bufferSize);
+    receiveBuffer.resize(bufferSize);
 }
 
 Echo::~Echo()
 {
     close(fd);
-
-    delete[] sendBuffer;
-    delete[] receiveBuffer;
 }
 
 int Echo::headerSize()
@@ -68,15 +65,15 @@ void Echo::send(int payloadLength, uint32_t realIp, bool reply, uint16_t id, uin
     if (payloadLength + sizeof(IpHeader) + sizeof(EchoHeader) > bufferSize)
         throw Exception("packet too big");
 
-    EchoHeader *header = (EchoHeader *)(sendBuffer + sizeof(IpHeader));
+    EchoHeader *header = (EchoHeader *)(sendBuffer.data() + sizeof(IpHeader));
     header->type = reply ? 0: 8;
     header->code = 0;
     header->id = htons(id);
     header->seq = htons(seq);
     header->chksum = 0;
-    header->chksum = icmpChecksum(sendBuffer + sizeof(IpHeader), payloadLength + sizeof(EchoHeader));
+    header->chksum = icmpChecksum(sendBuffer.data() + sizeof(IpHeader), payloadLength + sizeof(EchoHeader));
 
-    int result = sendto(fd, sendBuffer + sizeof(IpHeader), payloadLength + sizeof(EchoHeader), 0, (struct sockaddr *)&target, sizeof(struct sockaddr_in));
+    int result = sendto(fd, sendBuffer.data() + sizeof(IpHeader), payloadLength + sizeof(EchoHeader), 0, (struct sockaddr *)&target, sizeof(struct sockaddr_in));
     if (result == -1)
         syslog(LOG_ERR, "error sending icmp packet: %s", strerror(errno));
 }
@@ -86,7 +83,7 @@ int Echo::receive(uint32_t &realIp, bool &reply, uint16_t &id, uint16_t &seq)
     struct sockaddr_in source;
     int source_addr_len = sizeof(struct sockaddr_in);
 
-    int dataLength = recvfrom(fd, receiveBuffer, bufferSize, 0, (struct sockaddr *)&source, (socklen_t *)&source_addr_len);
+    int dataLength = recvfrom(fd, receiveBuffer.data(), bufferSize, 0, (struct sockaddr *)&source, (socklen_t *)&source_addr_len);
     if (dataLength == -1)
     {
         syslog(LOG_ERR, "error receiving icmp packet: %s", strerror(errno));
@@ -96,7 +93,7 @@ int Echo::receive(uint32_t &realIp, bool &reply, uint16_t &id, uint16_t &seq)
     if (dataLength < sizeof(IpHeader) + sizeof(EchoHeader))
         return -1;
 
-    EchoHeader *header = (EchoHeader *)(receiveBuffer + sizeof(IpHeader));
+    EchoHeader *header = (EchoHeader *)(receiveBuffer.data() + sizeof(IpHeader));
     if ((header->type != 0 && header->type != 8) || header->code != 0)
         return -1;
 
@@ -121,4 +118,14 @@ uint16_t Echo::icmpChecksum(const char *data, int length)
     sum = (sum >> 16) + (sum & 0xffff);
     sum += (sum >> 16);
     return ~sum;
+}
+
+char *Echo::sendPayloadBuffer()
+{
+    return sendBuffer.data() + headerSize();
+}
+
+char *Echo::receivePayloadBuffer()
+{
+    return receiveBuffer.data() + headerSize();
 }

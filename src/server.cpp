@@ -25,22 +25,25 @@
 #include <string.h>
 #include <arpa/inet.h>
 #include <syslog.h>
-#include <stdio.h>
+#include <iostream>
 
-using namespace std;
+using std::string;
+using std::cout;
+using std::endl;
 
 #define FIRST_ASSIGNED_IP_OFFSET 100
 
 const Worker::TunnelHeader::Magic Server::magic("hans");
 
-Server::Server(int tunnelMtu, const char *deviceName, const char *passphrase, uint32_t network, bool answerEcho, uid_t uid, gid_t gid, int pollTimeout)
+Server::Server(int tunnelMtu, const string *deviceName, const string &passphrase,
+               uint32_t network, bool answerEcho, uid_t uid, gid_t gid, int pollTimeout)
     : Worker(tunnelMtu, deviceName, answerEcho, uid, gid), auth(passphrase)
 {
     this->network = network & 0xffffff00;
     this->pollTimeout = pollTimeout;
     this->latestAssignedIpOffset = FIRST_ASSIGNED_IP_OFFSET - 1;
 
-    tun->setIp(this->network + 1, this->network + 2);
+    tun.setIp(this->network + 1, this->network + 2);
 
     dropPrivileges();
 }
@@ -200,6 +203,8 @@ bool Server::handleEchoData(const TunnelHeader &header, int dataLength, uint32_t
             break;
         case TunnelHeader::TYPE_POLL:
             return true;
+        default:
+            break;
     }
 
     syslog(LOG_DEBUG, "invalid packet from: %s, type: %d, state: %d", Utility::formatIp(realIp).c_str(), header.type, client->state);
@@ -248,7 +253,7 @@ void Server::pollReceived(ClientData *client, uint16_t echoId, uint16_t echoSeq)
     client->pollIds.push(ClientData::EchoId(echoId, echoSeq));
     if (client->pollIds.size() > maxSavedPolls)
         client->pollIds.pop();
-    DEBUG_ONLY(printf("poll -> %d\n", (int)client->pollIds.size()));
+    DEBUG_ONLY(cout << "poll -> " << client->pollIds.size() << endl);
 
     if (client->pendingPackets.size() > 0)
     {
@@ -256,14 +261,14 @@ void Server::pollReceived(ClientData *client, uint16_t echoId, uint16_t echoSeq)
         memcpy(echoSendPayloadBuffer(), &packet.data[0], packet.data.size());
         client->pendingPackets.pop();
 
-        DEBUG_ONLY(printf("pending packet: %d bytes\n", (int)packet.data.size()));
+        DEBUG_ONLY(cout << "pending packet: " << packet.data.size() << " bytes\n");
         sendEchoToClient(client, packet.type, packet.data.size());
     }
 
     client->lastActivity = now;
 }
 
-void Server::sendEchoToClient(ClientData *client, int type, int dataLength)
+void Server::sendEchoToClient(ClientData *client, TunnelHeader::Type type, int dataLength)
 {
     if (client->maxPolls == 0)
     {
@@ -276,7 +281,7 @@ void Server::sendEchoToClient(ClientData *client, int type, int dataLength)
         ClientData::EchoId echoId = client->pollIds.front();
         client->pollIds.pop();
 
-        DEBUG_ONLY(printf("sending -> %d\n", (int)client->pollIds.size()));
+        DEBUG_ONLY(cout << "sending -> " << client->pollIds.size() << endl);
         sendEcho(magic, type, dataLength, client->realIp, true, echoId.id, echoId.seq);
         return;
     }
@@ -287,7 +292,7 @@ void Server::sendEchoToClient(ClientData *client, int type, int dataLength)
         syslog(LOG_WARNING, "packet dropped to %s", Utility::formatIp(client->tunnelIp).c_str());
     }
 
-    DEBUG_ONLY(printf("packet queued: %d bytes\n", dataLength));
+    DEBUG_ONLY(cout << "packet queued: " << dataLength << " bytes\n");
 
     client->pendingPackets.push(Packet());
     Packet &packet = client->pendingPackets.back();

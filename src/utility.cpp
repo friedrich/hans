@@ -22,14 +22,16 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
+#include <sstream>
 
-using namespace std;
-
-string Utility::formatIp(uint32_t ip)
+std::string Utility::formatIp(uint32_t ip)
 {
-    char buffer[16];
-    sprintf(buffer, "%d.%d.%d.%d", (ip >> 24) & 0xff, (ip >> 16) & 0xff, (ip >> 8) & 0xff, ip & 0xff);
-    return buffer;
+    std::stringstream s;
+    s << ((ip >> 24) & 0xff) << '.'
+      << ((ip >> 16) & 0xff) << '.'
+      << ((ip >>  8) & 0xff) << '.'
+      << ((ip >>  0) & 0xff);
+    return s.str();
 }
 
 int Utility::rand()

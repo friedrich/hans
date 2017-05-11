@@ -30,6 +30,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <sstream>
 
 #ifdef WIN32
 #include <w32api/windows.h>
@@ -37,7 +38,7 @@
 
 typedef ip IpHeader;
 
-using namespace std;
+using std::string;
 
 #ifdef WIN32
 static void winsystem(char *cmd)
@@ -53,61 +54,61 @@ static void winsystem(char *cmd)
 }
 #endif
 
-Tun::Tun(const char *device, int mtu)
+Tun::Tun(const string *device, int mtu)
 {
-    char cmdline[512];
-
     this->mtu = mtu;
 
-    if (device != NULL)
-    {
-        strncpy(this->device, device, VTUN_DEV_LEN);
-        this->device[VTUN_DEV_LEN-1] = 0;
-    }
-    else
-        this->device[0] = 0;
+    if (device)
+        this->device = *device;
 
-    fd = tun_open(this->device);
+    this->device.resize(VTUN_DEV_LEN);
+    fd = tun_open(&this->device[0]);
+    this->device.resize(strlen(this->device.data()));
+
     if (fd == -1)
         throw Exception(string("could not create tunnel device: ") + tun_last_error());
 
-    syslog(LOG_INFO, "opened tunnel device: %s", this->device);
+    syslog(LOG_INFO, "opened tunnel device: %s", this->device.data());
+
+    std::stringstream cmdline;
 
 #ifdef WIN32
-    snprintf(cmdline, sizeof(cmdline), "netsh interface ipv4 set subinterface \"%s\" mtu=%d", this->device, mtu);
-    winsystem(cmdline);
+    cmdline << "netsh interface ipv4 set subinterface \"" << this->device
+            << "\" mtu=" << mtu;
+    winsystem(cmdline.str().data());
 #else
-    snprintf(cmdline, sizeof(cmdline), "/sbin/ifconfig %s mtu %u", this->device, mtu);
-    if (system(cmdline) != 0)
+    cmdline << "/sbin/ifconfig " << this->device << " mtu " << mtu;
+    if (system(cmdline.str().data()) != 0)
         syslog(LOG_ERR, "could not set tun device mtu");
 #endif
 }
 
 Tun::~Tun()
 {
-    tun_close(fd, device);
+    tun_close(fd, &device[0]);
 }
 
 void Tun::setIp(uint32_t ip, uint32_t destIp)
 {
-    char cmdline[512];
+    std::stringstream cmdline;
     string ips = Utility::formatIp(ip);
     string destIps = Utility::formatIp(destIp);
 
 #ifdef WIN32
-    snprintf(cmdline, sizeof(cmdline), "netsh interface ip set address name=\"%s\" "
-        "static %s 255.255.255.0", device, ips.c_str());
-    winsystem(cmdline);
+    cmdline << "netsh interface ip set address name=\"" << device << "\" "
+            << "static " << ips << " 255.255.255.0";
+    winsystem(cmdline.str().data());
 
     if (!tun_set_ip(fd, ip, ip & 0xffffff00, 0xffffff00))
         syslog(LOG_ERR, "could not set tun device driver ip address: %s", tun_last_error());
 #elif LINUX
-    snprintf(cmdline, sizeof(cmdline), "/sbin/ifconfig %s %s netmask 255.255.255.0", device, ips.c_str());
-    if (system(cmdline) != 0)
+    cmdline << "/sbin/ifconfig " << device << " " << ips << " netmask 255.255.255.0";
+    if (system(cmdline.str().data()) != 0)
         syslog(LOG_ERR, "could not set tun device ip address");
 #else
-    snprintf(cmdline, sizeof(cmdline), "/sbin/ifconfig %s %s %s netmask 255.255.255.255", device, ips.c_str(), destIps.c_str());
-    if (system(cmdline) != 0)
+    cmdline << "/sbin/ifconfig " << device << " " << ips << " " << destIps
+            << " netmask 255.255.255.255";
+    if (system(cmdline.str().data()) != 0)
         syslog(LOG_ERR, "could not set tun device ip address");
 #endif
 }

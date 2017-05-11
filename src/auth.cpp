@@ -23,10 +23,9 @@
 
 #include <arpa/inet.h>
 
-Auth::Auth(const char *passphrase)
-{
-    this->passphrase = passphrase;
-}
+Auth::Auth(const std::string &passphrase)
+    : passphrase(passphrase)
+{ }
 
 Auth::Response Auth::getResponse(const Challenge &challenge) const
 {
@@ -34,7 +33,7 @@ Auth::Response Auth::getResponse(const Challenge &challenge) const
 
     Response response;
 
-    hasher << passphrase.c_str();
+    hasher << passphrase.data();
     hasher.Input(&challenge[0], challenge.size());
 
     hasher.Result((unsigned int *)response.data);

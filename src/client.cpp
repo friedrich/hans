@@ -28,14 +28,15 @@
 #include <netinet/in.h>
 #include <syslog.h>
 
-using namespace std;
+using std::vector;
+using std::string;
 
 const Worker::TunnelHeader::Magic Client::magic("hanc");
 
-Client::Client(int tunnelMtu, const char *deviceName, uint32_t serverIp,
-               int maxPolls, const char *passphrase, uid_t uid, gid_t gid,
+Client::Client(int tunnelMtu, const string *deviceName, uint32_t serverIp,
+               int maxPolls, const string &passphrase, uid_t uid, gid_t gid,
                bool changeEchoId, bool changeEchoSeq, uint32_t desiredIp)
-: Worker(tunnelMtu, deviceName, false, uid, gid), auth(passphrase)
+    : Worker(tunnelMtu, deviceName, false, uid, gid), auth(passphrase)
 {
     this->serverIp = serverIp;
     this->clientIp = INADDR_NONE;
@@ -137,7 +138,7 @@ bool Client::handleEchoData(const TunnelHeader &header, int dataLength, uint32_t
 
                     clientIp = ip;
                     desiredIp = ip;
-                    tun->setIp(ip, (ip & 0xffffff00) + 1);
+                    tun.setIp(ip, (ip & 0xffffff00) + 1);
                 }
                 state = STATE_ESTABLISHED;
 
@@ -160,6 +161,8 @@ bool Client::handleEchoData(const TunnelHeader &header, int dataLength, uint32_t
                 return true;
             }
             break;
+        default:
+            break;
     }
 
     syslog(LOG_DEBUG, "invalid packet type: %d, state: %d", header.type, state);
@@ -167,7 +170,7 @@ bool Client::handleEchoData(const TunnelHeader &header, int dataLength, uint32_t
     return true;
 }
 
-void Client::sendEchoToServer(int type, int dataLength)
+void Client::sendEchoToServer(Worker::TunnelHeader::Type type, int dataLength)
 {
     if (maxPolls == 0 && state == STATE_ESTABLISHED)
         setTimeout(KEEP_ALIVE_INTERVAL);

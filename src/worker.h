@@ -30,8 +30,9 @@
 class Worker
 {
 public:
-    Worker(int tunnelMtu, const char *deviceName, bool answerEcho, uid_t uid, gid_t gid);
-    virtual ~Worker();
+    Worker(int tunnelMtu, const std::string *deviceName, bool answerEcho,
+           uid_t uid, gid_t gid);
+    virtual ~Worker() { }
 
     virtual void run();
     virtual void stop();
@@ -52,21 +53,21 @@ protected:
             char data[4];
         };
 
-        Magic magic;
-        uint8_t type;
-
         enum Type
         {
-            TYPE_RESET_CONNECTION    = 1,
-            TYPE_CONNECTION_REQUEST    = 2,
-            TYPE_CHALLENGE            = 3,
-            TYPE_CHALLENGE_RESPONSE    = 4,
-            TYPE_CONNECTION_ACCEPT    = 5,
-            TYPE_CHALLENGE_ERROR    = 6,
-            TYPE_DATA                = 7,
-            TYPE_POLL                = 8,
-            TYPE_SERVER_FULL        = 9
+            TYPE_RESET_CONNECTION = 1,
+            TYPE_CONNECTION_REQUEST = 2,
+            TYPE_CHALLENGE = 3,
+            TYPE_CHALLENGE_RESPONSE = 4,
+            TYPE_CONNECTION_ACCEPT = 5,
+            TYPE_CHALLENGE_ERROR = 6,
+            TYPE_DATA = 7,
+            TYPE_POLL = 8,
+            TYPE_SERVER_FULL = 9
         };
+
+        Magic magic;
+        uint8_t type;
     }; // size = 5
 
     virtual bool handleEchoData(const TunnelHeader &header, int dataLength,
@@ -75,8 +76,8 @@ protected:
                                uint32_t destIp); // to echoSendPayloadBuffer
     virtual void handleTimeout();
 
-    void sendEcho(const TunnelHeader::Magic &magic, int type, int length,
-                  uint32_t realIp, bool reply, uint16_t id, uint16_t seq);
+    void sendEcho(const TunnelHeader::Magic &magic, TunnelHeader::Type type,
+                  int length, uint32_t realIp, bool reply, uint16_t id, uint16_t seq);
     void sendToTun(int length); // from echoReceivePayloadBuffer
 
     void setTimeout(Time delta);
@@ -88,8 +89,8 @@ protected:
 
     void dropPrivileges();
 
-    Echo *echo;
-    Tun *tun;
+    Echo echo;
+    Tun tun;
     bool alive;
     bool answerEcho;
     int tunnelMtu;

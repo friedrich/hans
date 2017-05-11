@@ -36,7 +36,7 @@ public:
         bool operator==(const Response &other) const { return memcmp(this, &other, sizeof(Response)) == 0; }
     };
 
-    Auth(const char *passphrase);
+    Auth(const std::string &passphrase);
 
     Challenge generateChallenge(int length) const;
     Response getResponse(const Challenge &challenge) const;

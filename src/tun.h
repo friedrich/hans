@@ -28,7 +28,7 @@
 class Tun
 {
 public:
-    Tun(const char *device, int mtu);
+    Tun(const std::string *device, int mtu);
     ~Tun();
 
     int getFd() { return fd; }
@@ -40,7 +40,7 @@ public:
 
     void setIp(uint32_t ip, uint32_t destIp);
 protected:
-    char device[VTUN_DEV_LEN];
+    std::string device;
 
     int mtu;
     int fd;

@@ -23,22 +23,17 @@
 #include <stdio.h>
 #include <string.h>
 
-using namespace std;
+using std::string;
 
-Exception::Exception(const char *msg)
+Exception::Exception(const string &msg)
 {
     this->msg = msg;
 }
 
-Exception::Exception(const string msg)
-{
-    this->msg = msg;
-}
-
-Exception::Exception(const char *msg, bool appendSystemError)
+Exception::Exception(const string &msg, bool appendSystemError)
 {
     if (appendSystemError)
-        this->msg = string(msg) + ": " + strerror(errno);
+        this->msg = msg + ": " + strerror(errno);
     else
         this->msg = msg;
 }
