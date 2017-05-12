@@ -89,7 +89,7 @@ void Client::sendChallengeResponse(int dataLength)
     setTimeout(5000);
 }
 
-bool Client::handleEchoData(const TunnelHeader &header, int dataLength, uint32_t realIp, bool reply, uint16_t id, uint16_t seq)
+bool Client::handleEchoData(const TunnelHeader &header, int dataLength, uint32_t realIp, bool reply, uint16_t, uint16_t)
 {
     if (realIp != serverIp || !reply)
         return false;
@@ -208,7 +208,7 @@ void Client::handleDataFromServer(int dataLength)
         sendEchoToServer(TunnelHeader::TYPE_POLL, 0);
 }
 
-void Client::handleTunData(int dataLength, uint32_t sourceIp, uint32_t destIp)
+void Client::handleTunData(int dataLength, uint32_t, uint32_t)
 {
     if (state != STATE_ESTABLISHED)
         return;

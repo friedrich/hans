@@ -25,6 +25,7 @@
 #include <string.h>
 #include <arpa/inet.h>
 #include <syslog.h>
+#include <stdio.h>
 
 using namespace std;
 
@@ -223,7 +224,7 @@ Server::ClientData *Server::getClientByRealIp(uint32_t ip)
     return &*it->second;
 }
 
-void Server::handleTunData(int dataLength, uint32_t sourceIp, uint32_t destIp)
+void Server::handleTunData(int dataLength, uint32_t, uint32_t destIp)
 {
     if (destIp == network + 255) // ignore broadcasts
         return;
@@ -246,7 +247,7 @@ void Server::pollReceived(ClientData *client, uint16_t echoId, uint16_t echoSeq)
     client->pollIds.push(ClientData::EchoId(echoId, echoSeq));
     if (client->pollIds.size() > maxSavedPolls)
         client->pollIds.pop();
-    DEBUG_ONLY(printf("poll -> %d\n", client->pollIds.size()));
+    DEBUG_ONLY(printf("poll -> %d\n", (int)client->pollIds.size()));
 
     if (client->pendingPackets.size() > 0)
     {
@@ -254,7 +255,7 @@ void Server::pollReceived(ClientData *client, uint16_t echoId, uint16_t echoSeq)
         memcpy(echoSendPayloadBuffer(), &packet.data[0], packet.data.size());
         client->pendingPackets.pop();
 
-        DEBUG_ONLY(printf("pending packet: %d bytes\n", packet.data.size()));
+        DEBUG_ONLY(printf("pending packet: %d bytes\n", (int)packet.data.size()));
         sendEchoToClient(client, packet.type, packet.data.size());
     }
 
@@ -274,7 +275,7 @@ void Server::sendEchoToClient(ClientData *client, int type, int dataLength)
         ClientData::EchoId echoId = client->pollIds.front();
         client->pollIds.pop();
 
-        DEBUG_ONLY(printf("sending -> %d\n", client->pollIds.size()));
+        DEBUG_ONLY(printf("sending -> %d\n", (int)client->pollIds.size()));
         sendEcho(magic, type, dataLength, client->realIp, true, echoId.id, echoId.seq);
         return;
     }

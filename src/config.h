@@ -24,5 +24,5 @@
 
 #define CHALLENGE_SIZE 20
 
-//#define DEBUG_ONLY(a) a
+// #define DEBUG_ONLY(a) a
 #define DEBUG_ONLY(a)

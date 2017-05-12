@@ -28,6 +28,7 @@
 #include <unistd.h>
 #include <sys/select.h>
 #include <grp.h>
+#include <stdio.h>
 
 using namespace std;
 
@@ -160,7 +161,10 @@ void Worker::run()
                 {
                     TunnelHeader *header = (TunnelHeader *)echo->receivePayloadBuffer();
 
-                    DEBUG_ONLY(printf("received: type %d, length %d, id %d, seq %d\n", header->type, dataLength - sizeof(TunnelHeader), id, seq));
+                    DEBUG_ONLY(
+                        printf("received: type %d, length %d, id %d, seq %d\n",
+                               header->type, (int)(dataLength - sizeof(TunnelHeader)),
+                               id, seq));
 
                     valid = handleEchoData(*header, dataLength - sizeof(TunnelHeader), ip, reply, id, seq);
                 }
@@ -215,4 +219,23 @@ void Worker::dropPrivileges()
 
     privilegesDropped = true;
 #endif
+}
+
+bool Worker::handleEchoData(const TunnelHeader &, int, uint32_t, bool, uint16_t, uint16_t)
+{
+    return true;
+}
+
+void Worker::handleTunData(int, uint32_t, uint32_t) { }
+
+void Worker::handleTimeout() { }
+
+char *Worker::echoSendPayloadBuffer()
+{
+    return echo->sendPayloadBuffer() + sizeof(TunnelHeader);
+}
+
+char *Worker::echoReceivePayloadBuffer()
+{
+    return echo->receivePayloadBuffer() + sizeof(TunnelHeader);
 }

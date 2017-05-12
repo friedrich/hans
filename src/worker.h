@@ -69,17 +69,20 @@ protected:
         };
     }; // size = 5
 
-    virtual bool handleEchoData(const TunnelHeader &header, int dataLength, uint32_t realIp, bool reply, uint16_t id, uint16_t seq) { return true; }
-    virtual void handleTunData(int dataLength, uint32_t sourceIp, uint32_t destIp) { } // to echoSendPayloadBuffer
-    virtual void handleTimeout() { }
+    virtual bool handleEchoData(const TunnelHeader &header, int dataLength,
+                                uint32_t realIp, bool reply, uint16_t id, uint16_t seq);
+    virtual void handleTunData(int dataLength, uint32_t sourceIp,
+                               uint32_t destIp); // to echoSendPayloadBuffer
+    virtual void handleTimeout();
 
-    void sendEcho(const TunnelHeader::Magic &magic, int type, int length, uint32_t realIp, bool reply, uint16_t id, uint16_t seq);
+    void sendEcho(const TunnelHeader::Magic &magic, int type, int length,
+                  uint32_t realIp, bool reply, uint16_t id, uint16_t seq);
     void sendToTun(int length); // from echoReceivePayloadBuffer
 
     void setTimeout(Time delta);
 
-    char *echoSendPayloadBuffer() { return echo->sendPayloadBuffer() + sizeof(TunnelHeader); }
-    char *echoReceivePayloadBuffer() { return echo->receivePayloadBuffer() + sizeof(TunnelHeader); }
+    char *echoSendPayloadBuffer();
+    char *echoReceivePayloadBuffer();
 
     int payloadBufferSize() { return tunnelMtu; }
 
