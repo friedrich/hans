@@ -39,7 +39,7 @@ Server::Server(int tunnelMtu, const char *deviceName, const char *passphrase, ui
     this->pollTimeout = pollTimeout;
     this->latestAssignedIpOffset = FIRST_ASSIGNED_IP_OFFSET - 1;
 
-    tun->setIp(this->network + 1, this->network + 2, true);
+    tun->setIp(this->network + 1, this->network + 2);
 
     dropPrivileges();
 }

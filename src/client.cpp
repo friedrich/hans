@@ -137,7 +137,7 @@ bool Client::handleEchoData(const TunnelHeader &header, int dataLength, uint32_t
 
                     clientIp = ip;
                     desiredIp = ip;
-                    tun->setIp(ip, (ip & 0xffffff00) + 1, false);
+                    tun->setIp(ip, (ip & 0xffffff00) + 1);
                 }
                 state = STATE_ESTABLISHED;
 
