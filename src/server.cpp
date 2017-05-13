@@ -60,7 +60,8 @@ void Server::handleUnknownClient(const TunnelHeader &header, int dataLength, uin
 
     if (header.type != TunnelHeader::TYPE_CONNECTION_REQUEST || dataLength != sizeof(ClientConnectData))
     {
-        syslog(LOG_DEBUG, "invalid request %s", Utility::formatIp(realIp).c_str());
+        syslog(LOG_DEBUG, "invalid request (type %d) from %s", header.type,
+               Utility::formatIp(realIp).c_str());
         sendReset(&client);
         return;
     }
