@@ -101,7 +101,7 @@ bool Client::handleEchoData(const TunnelHeader &header, int dataLength, uint32_t
     switch (header.type)
     {
         case TunnelHeader::TYPE_RESET_CONNECTION:
-            syslog(LOG_DEBUG, "reset reveiced");
+            syslog(LOG_DEBUG, "reset received");
 
             sendConnectionRequest();
             return true;
@@ -114,7 +114,7 @@ bool Client::handleEchoData(const TunnelHeader &header, int dataLength, uint32_t
         case TunnelHeader::TYPE_CHALLENGE:
             if (state == STATE_CONNECTION_REQUEST_SENT)
             {
-                syslog(LOG_DEBUG, "challenge received");
+                syslog(LOG_DEBUG, "authentication request received");
                 sendChallengeResponse(dataLength);
                 return true;
             }

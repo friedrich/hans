@@ -75,7 +75,9 @@ void Server::handleUnknownClient(const TunnelHeader &header, int dataLength, uin
     client.state = ClientData::STATE_NEW;
     client.tunnelIp = reserveTunnelIp(connectData->desiredIp);
 
-    syslog(LOG_DEBUG, "new client: %s (%s)\n", Utility::formatIp(client.realIp).c_str(), Utility::formatIp(client.tunnelIp).c_str());
+    syslog(LOG_DEBUG, "new client %s with tunnel address %s\n",
+           Utility::formatIp(client.realIp).data(),
+           Utility::formatIp(client.tunnelIp).data());
 
     if (client.tunnelIp != 0)
     {
@@ -96,7 +98,8 @@ void Server::handleUnknownClient(const TunnelHeader &header, int dataLength, uin
 
 void Server::sendChallenge(ClientData *client)
 {
-    syslog(LOG_DEBUG, "sending challenge to: %s\n", Utility::formatIp(client->realIp).c_str());
+    syslog(LOG_DEBUG, "sending authentication request to %s\n",
+           Utility::formatIp(client->realIp).data());
 
     memcpy(echoSendPayloadBuffer(), &client->challenge[0], client->challenge.size());
     sendEchoToClient(client, TunnelHeader::TYPE_CHALLENGE, client->challenge.size());
@@ -106,7 +109,9 @@ void Server::sendChallenge(ClientData *client)
 
 void Server::removeClient(ClientData *client)
 {
-    syslog(LOG_DEBUG, "removing client: %s (%s)\n", Utility::formatIp(client->realIp).c_str(), Utility::formatIp(client->tunnelIp).c_str());
+    syslog(LOG_DEBUG, "removing client %s with tunnel ip %s\n",
+           Utility::formatIp(client->realIp).data(),
+           Utility::formatIp(client->tunnelIp).data());
 
     releaseTunnelIp(client->tunnelIp);
 
@@ -124,7 +129,8 @@ void Server::checkChallenge(ClientData *client, int length)
 
     if (length != sizeof(Auth::Response) || memcmp(&rightResponse, echoReceivePayloadBuffer(), length) != 0)
     {
-        syslog(LOG_DEBUG, "wrong challenge response\n");
+        syslog(LOG_DEBUG, "wrong challenge response from %s\n",
+               Utility::formatIp(client->realIp).data());
 
         sendEchoToClient(client, TunnelHeader::TYPE_CHALLENGE_ERROR, 0);
 
@@ -139,12 +145,14 @@ void Server::checkChallenge(ClientData *client, int length)
 
     client->state = ClientData::STATE_ESTABLISHED;
 
-    syslog(LOG_INFO, "connection established: %s", Utility::formatIp(client->realIp).c_str());
+    syslog(LOG_INFO, "connection established to %s",
+           Utility::formatIp(client->realIp).data());
 }
 
 void Server::sendReset(ClientData *client)
 {
-    syslog(LOG_DEBUG, "sending reset: %s", Utility::formatIp(client->realIp).c_str());
+    syslog(LOG_DEBUG, "sending reset to %s",
+           Utility::formatIp(client->realIp).data());
     sendEchoToClient(client, TunnelHeader::TYPE_RESET_CONNECTION, 0);
 }
 
@@ -177,7 +185,7 @@ bool Server::handleEchoData(const TunnelHeader &header, int dataLength, uint32_t
             while (client->pollIds.size() > 1)
                 client->pollIds.pop();
 
-            syslog(LOG_DEBUG, "reconnecting %s", Utility::formatIp(realIp).c_str());
+            syslog(LOG_DEBUG, "reconnecting %s", Utility::formatIp(realIp).data());
             sendReset(client);
             removeClient(client);
             return true;
@@ -207,7 +215,8 @@ bool Server::handleEchoData(const TunnelHeader &header, int dataLength, uint32_t
             break;
     }
 
-    syslog(LOG_DEBUG, "invalid packet from: %s, type: %d, state: %d", Utility::formatIp(realIp).c_str(), header.type, client->state);
+    syslog(LOG_DEBUG, "invalid packet from: %s, type: %d, state: %d",
+           Utility::formatIp(realIp).data(), header.type, client->state);
 
     return true;
 }
@@ -239,7 +248,8 @@ void Server::handleTunData(int dataLength, uint32_t, uint32_t destIp)
 
     if (client == NULL)
     {
-        syslog(LOG_DEBUG, "unknown client: %s\n", Utility::formatIp(destIp).c_str());
+        syslog(LOG_DEBUG, "data received for unknown client %s\n",
+               Utility::formatIp(destIp).data());
         return;
     }
 
@@ -289,7 +299,8 @@ void Server::sendEchoToClient(ClientData *client, TunnelHeader::Type type, int d
     if (client->pendingPackets.size() == MAX_BUFFERED_PACKETS)
     {
         client->pendingPackets.pop();
-        syslog(LOG_WARNING, "packet dropped to %s", Utility::formatIp(client->tunnelIp).c_str());
+        syslog(LOG_WARNING, "packet to %s dropped",
+               Utility::formatIp(client->tunnelIp).data());
     }
 
     DEBUG_ONLY(cout << "packet queued: " << dataLength << " bytes\n");
@@ -315,7 +326,7 @@ void Server::handleTimeout()
 
         if (client.lastActivity + KEEP_ALIVE_INTERVAL * 2 < now)
         {
-            syslog(LOG_DEBUG, "client timeout: %s\n",
+            syslog(LOG_DEBUG, "client %s timed out\n",
                    Utility::formatIp(client.realIp).data());
             removeClient(&client);
         }
