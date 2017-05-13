@@ -229,6 +229,8 @@ int main(int argc, char *argv[])
             uint32_t serverIp = sockaddr->sin_addr.s_addr;
 
             worker = new Client(mtu, device, ntohl(serverIp), maxPolls, password, uid, gid, changeEchoId, changeEchoSeq, clientIp);
+
+            freeaddrinfo(res);
         }
 
         if (!foreground)
