@@ -1,0 +1,5 @@
+# Run Hans in a server mode
+HANS_OPTIONS="-f -r -s 192.168.100.254 -p godsexlovesecret"
+
+# Run hans in a client mode
+# HANS_OPTIONS="-f -q -r -c 172.17.0.2 -a 192.168.100.254 -d tun0 -p godsexlovesecret"
