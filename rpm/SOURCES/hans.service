@@ -1,0 +1,13 @@
+[Unit]
+Description=IP over ICMP daemon
+After=network.target
+
+[Service]
+Type=simple
+EnvironmentFile=-/etc/sysconfig/hans
+ExecStart=/usr/bin/hans "$HANS_OPTIONS"
+Restart=on-failure
+RestartSec=30s
+
+[Install]
+WantedBy=multi-user.target
