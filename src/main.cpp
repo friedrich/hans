@@ -41,6 +41,12 @@
 #define AI_V4MAPPED 0
 #endif
 
+#ifdef ANDROID
+#define AI_FLAGS (AI_ADDRCONFIG)
+#else
+#define AI_FLAGS (AI_V4MAPPED | AI_ADDRCONFIG)
+#endif
+
 using std::string;
 
 static Worker *worker = NULL;
@@ -226,7 +232,7 @@ int main(int argc, char *argv[])
             struct addrinfo *res = NULL;
 
             hints.ai_family = AF_INET;
-            hints.ai_flags = AI_V4MAPPED | AI_ADDRCONFIG;
+            hints.ai_flags = AI_FLAGS;
 
             int err = getaddrinfo(serverName.data(), NULL, &hints, &res);
             if (err)
