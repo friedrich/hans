@@ -41,7 +41,7 @@ dev)
             if [ "$MODE" == TUNEMU ]; then
                 echo src/tun_dev_darwin_emu.c
             else
-                echo src/tun_dev_generic.c
+                echo src/tun_dev_utun.c
             fi
         ;;
         CYGWIN*)
