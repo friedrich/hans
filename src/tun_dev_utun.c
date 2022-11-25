@@ -15,6 +15,8 @@
 #include <net/if_utun.h>
 #include <netinet/ip.h>
 
+#include "tun_dev.h"
+
 /*
  * Allocate TUN device, returns opened fd.
  * Stores dev name in the first arg(must be large enough).
@@ -23,7 +25,6 @@ int tun_open(char *ifname)
 {
     struct sockaddr_ctl addr;
     struct ctl_info info;
-    socklen_t ifname_len = 10;
     int fd = -1;
     int err = 0;
     int unit = 0;
@@ -63,6 +64,7 @@ int tun_open(char *ifname)
     }
 
     /* Retrieve the assigned interface name. */
+    socklen_t ifname_len = VTUN_DEV_LEN;
     err = getsockopt(fd, SYSPROTO_CONTROL, UTUN_OPT_IFNAME, ifname, &ifname_len);
     if (err != 0) {
         close(fd);
