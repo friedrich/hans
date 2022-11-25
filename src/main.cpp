@@ -62,7 +62,7 @@ static void sig_int_handler(int)
 static void usage()
 {
     std::cerr <<
-        "Hans - IP over ICMP version 1.0\n\n"
+        "Hans - IP over ICMP version 1.1\n\n"
         "RUN AS CLIENT\n"
         "  hans -c server [-fv] [-p passphrase] [-u user] [-d tun_device]\n"
         "       [-m reference_mtu] [-w polls]\n\n"
