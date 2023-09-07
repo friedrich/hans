@@ -78,7 +78,7 @@ Tun::Tun(const string *device, int mtu)
     winsystem(cmdline.str().data());
 #else
 #ifdef LINUX
-    cmdline << "/sbin/ip link set " << this->device << " mtu " << mtu;
+    cmdline << "/usr/sbin/ip link set " << this->device << " mtu " << mtu;
 #else
     cmdline << "/sbin/ifconfig " << this->device << " mtu " << mtu;
 #endif
@@ -107,7 +107,7 @@ void Tun::setIp(uint32_t ip, uint32_t destIp)
         syslog(LOG_ERR, "could not set tun device driver ip address: %s", tun_last_error());
 #else
 #ifdef LINUX
-    cmdline << "/sbin/ip addr replace " << ips << "/24 dev " << device;
+    cmdline << "/usr/sbin/ip addr replace " << ips << "/24 dev " << device;
 #elif defined(OLD_LINUX)
     cmdline << "/sbin/ifconfig " << device << " " << ips << " netmask 255.255.255.0";
 #else
