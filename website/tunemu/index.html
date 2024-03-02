@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>tunemu - Tun device emulation for Darwin</title>
+  <link href='http://fonts.googleapis.com/css?family=Source+Code+Pro|Open+Sans:400,700' rel='stylesheet' type='text/css'>
+  <style type="text/css">
+    body {
+      font-family: "Open Sans", sans-serif;
+      line-height: 1.6em;
+      font-size: 0.9em;
+      background: #666666;
+      margin: 0;
+      padding: 0;
+      color: #000000;
+    }
+    #container {
+      width: 780px;
+      background: #FFFFFF;
+      margin: 0 auto;
+      padding: 5px;
+    }
+    #mainContent {
+      padding: 20px 50px 30px 50px;
+      position: relative;
+    }
+    h1 {
+      margin-top: 1.5em;
+      margin-bottom: 0;
+      font-size: 2.5em;
+      font-weight: normal;
+    }
+    h1 .subtext {
+      margin-bottom: 0;
+      font-weight: normal;
+      font-size: 0.5em;
+    }
+    h2 {
+      margin-top: 1em;
+      margin-bottom: 0.8em;
+      font-size: 1.5em;
+      font-weight: normal;
+    }
+    h3 {
+      margin-bottom: 0;
+      font-size: 1.2em;
+      font-weight: normal;
+    }
+    dd {
+      margin: 0.5em 0 0.5em 2em;
+    }
+    dl {
+      margin: 1.5em 0;
+    }
+    dt {
+      font-weight: bold;
+    }
+    code {
+      font-family: "Source Code Pro", monospace;
+      display: block;
+      border-top-width: 1px;
+      border-right-width: 1px;
+      border-bottom-width: 1px;
+      border-left-width: 1px;
+      border-top-style: dashed;
+      border-right-style: dashed;
+      border-bottom-style: dashed;
+      border-left-style: dashed;
+      padding: 0.3em 1em;
+    }
+    ul {
+      margin: 0;
+    }
+    #ref {
+      bottom: 30px;
+      right: 50px;
+      position: absolute;
+    }
+    #ref a {
+      color: black;
+    }
+  </style>
+</head>
+
+<body class="oneColFixCtr">
+
+<div id="container">
+  <div id="mainContent">
+    <h1>tunemu <span class="subtext">Tun device emulation for Darwin</span></h1>
+    <p>tunemu allows programs that require <a href="http://vtun.sourceforge.net/tun/">tun</a> devices to run on Darwin (OS X) without kernel support.</p>
+    <h2>How</h2>
+    tunemu uses the kernel ppp driver to create a ppp device. It then reads packets from the ppp instance and writes packets to the loopback device using libpcap.
+    <h2>Source</h2>
+    <ul>
+      <li><a href="https://github.com/friedrich/hans/blob/master/src/tunemu.h">tunemu.h</a></li>
+      <li><a href="https://github.com/friedrich/hans/blob/master/src/tunemu.c">tunemu.c</a></li>
+    </ul>
+    <p>tunemu is part of <a href="http://code.gerade.org/hans/">Hans</a>.</p>
+   <h2>Supported programs</h2>
+    <dl>
+      <dt><a href="http://code.gerade.org/hans/">Hans</a></dt>
+      <dd>In order to build Hans with tunemu support, first run &quot;make&nbsp;tunemu.o&quot; and then &quot;MODE=tunemu&nbsp;make&quot;.</dd>
+      <dt><a href="http://code.kryo.se/iodine/">iodine</a></dt>
+      <dd>Get the <a href="https://github.com/friedrich/iodine-tunemu">patched iodine</a>.</dd>
+      <dt><a href="http://openvpn.net/">OpenVPN</a></dt>
+      <dd>
+        <ul class="obsolete">
+          <li>Get the <a href="openvpn-2.1_rc19-tunemu.tar.gz">patched OpenVPN</a>.</li>
+          <li>Run "./configure --enable-tunemu".</li>
+          <li>Run "make".</li>
+        </ul>
+      </dd>
+    </dl>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hans &ndash; IP over ICMP</title>
+  <link rel="stylesheet" href="main.css">
+</head>
+
+<body>
+  <h1>Hans &ndash; IP over ICMP</h1>
+  <p>Hans makes it possible to tunnel IPv4 through ICMP echo packets, so you could call it a ping tunnel. This can
+    be useful when you find yourself in the situation that your Internet access is firewalled, but pings are
+    allowed.</p>
+  <p>Hans runs on Linux as a client and a server. It runs on Mac OS X, iPhone/iPod touch, FreeBSD, OpenBSD and
+    Windows as a client only.</p>
+  <p>Is is inspired by <a href="http://thomer.com/icmptx/">icmptx</a> and adds some features:</p>
+  <h2>Features</h2>
+  <ul>
+    <li>Reliability: Hans works reliably in situations when the client is behind a firewall that allows only one
+      echo reply per request.</li>
+    <li>Security: Hans uses a challenge-response based login mechanism.</li>
+    <li>Multiple clients: Hans currently supports up to 253 clients, which is the number of available IPs on the
+      virtual subnet.</li>
+    <li>Easy setup: Hans automatically assigns IP addresses.</li>
+  </ul>
+  <p>For the iPhone/iPod touch version have a look at <a href="http://code.gerade.org/tunemu/">tunemu</a>.</p>
+  <h2>Get Hans</h2>
+  <p>Hans <a href="https://sourceforge.net/projects/hanstunnel/files/source/">source</a>.
+    Hans <a href="https://sourceforge.net/projects/hanstunnel/files/osx/">Mac OS X binary</a>.
+    Hans <a href="https://sourceforge.net/projects/hanstunnel/files/windows/">Windows binary</a>.</p>
+  <p>Browse the source and contribute on <a href="https://github.com/friedrich/hans">Github</a>.</p>
+  <p>View the <a href="https://raw.github.com/friedrich/hans/master/CHANGES">changelog</a>.</p>
+  <h2>Use Hans</h2>
+  <p>First, make sure you kernel supports tun devices. For Mac OS X you can get the drivers <a
+      href="http://tuntaposx.sourceforge.net/">here</a>.
+    On Windows you have to install a tap device driver by downloading the <a
+      href="http://openvpn.net/index.php/open-source/downloads.html">Windows Installer of OpenVPN</a> and selecting
+    "TAP Virtual Ethernet Adapter" during the installation.</p>
+  <p>To compile hans, unpack it and run "make":</p>
+  <pre><code>tar -xzf hans-version.tar.gz
+cd hans-version
+make
+</code></pre>
+  <h3>To run as a server (as root):</h3>
+  <pre><code>./hans -s 10.1.2.0 -p password
+</code></pre>
+  <p>This will create a new tun device and assign the IP 10.1.2.1 to it. Note that Hans can not receive echo
+    requests on BSD systems. Therefore the server only works on Linux.</p>
+  <h3>To run as a client (as root):</h3>
+  <pre><code>./hans -c server_address -p password
+</code></pre>
+  <p>This will connect to the server at "server_addess", create a new tun device and assign an IP from the network
+    10.1.2.0/24 to it.</p>
+  <p>Now you can run a proxy on the server or let it act as a router and use NAT to allow the clients to access the
+    Internet.</p>
+  <p>On Windows you must run your command prompt as Administrator in order for hans to work.</p>
+  <h2>Troubleshoot / Tweak</h2>
+  <p>If you are behind a firewall that filters icmp packets in any way, which is likely, you might have to make some
+    adjustments. During this process it is useful to add the "-fv" options to the command. With this hans stays
+    attached to the terminal and shows some debug output.</p>
+  <p>First, you should tell your operating system not to respond to echo requests. On Linux this can be done by:</p>
+  <pre><code>echo 1 &gt; /proc/sys/net/ipv4/icmp_echo_ignore_all
+</code></pre>
+  <p>Now you might want to add the "-r" option to the server command. This tells Hans also to respond to ordinary
+    pings.</p>
+  <p>By default the client is configured to send 10 poll "echo requests" that can be answered by the server, when
+    data needs to be transmitted. You might want to lower this value using the "-w" flag, if you experience packet
+    loss. You can also try to raise this value to increase the throughput of the tunnel.</p>
+  <p>In some cases it might be necessary to tell the client to change the echo id or sequence number with each
+    request. This might have a serious impact on performance. You should first try the "-q" flag and if this does
+    not work, the "-i" flag.</p>
+  <p>Finally you can tell Hans to run as a different user via the "-u" flag.</p>
+  <p>Note that when you run Hans without any parameters you get a short description of the available commands.</p>
+  <p>Please report at the <a href="https://github.com/friedrich/hans/issues">issue tracker</a> if there are further
+    problems.</p>
+</body>
+
+</html>
