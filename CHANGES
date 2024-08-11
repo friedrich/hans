@@ -1,3 +1,8 @@
+Release 1.2 (August 2024)
+-------------------------
+* Added support for configuration files, and added /etc/hans.conf as an example [Randolf Richardson]
+* Documented /etc/hans.conf (in configuration file comments) [Randolf Richardson]
+
 Release 1.1 (November 2022)
 ---------------------------
 * Switch to utun devices on macOS (thanks to unkernet)
