@@ -23,6 +23,7 @@
 
 #include <iostream>
 #include <arpa/inet.h>
+#include <fstream>
 #include <netinet/in.h>
 #include <sys/types.h>
 #include <stdlib.h>
@@ -45,55 +46,6 @@ using std::string;
 
 static Worker *worker = NULL;
 
-static void sig_term_handler(int)
-{
-    syslog(LOG_INFO, "SIGTERM received");
-    if (worker)
-        worker->stop();
-}
-
-static void sig_int_handler(int)
-{
-    syslog(LOG_INFO, "SIGINT received");
-    if (worker)
-        worker->stop();
-}
-
-static void usage()
-{
-    std::cerr <<
-        "Hans - IP over ICMP version 1.1\n\n"
-        "RUN AS CLIENT\n"
-        "  hans -c server [-fv] [-p passphrase] [-u user] [-d tun_device]\n"
-        "       [-m reference_mtu] [-w polls]\n\n"
-        "RUN AS SERVER (linux only)\n"
-        "  hans -s network [-fvr] [-p passphrase] [-u user] [-d tun_device]\n"
-        "       [-m reference_mtu] [-a ip]\n\n"
-        "ARGUMENTS\n"
-        "  -c server     Run as client. Connect to given server address.\n"
-        "  -s network    Run as server. Use given network address on virtual interfaces.\n"
-        "  -p passphrase Set passphrase.\n"
-        "  -u username   Change user under which the program runs.\n"
-        "  -a ip         Request assignment of given tunnel ip address from the server.\n"
-        "  -r            Respond to ordinary pings in server mode.\n"
-        "  -d device     Use given tun device.\n"
-        "  -m mtu        Set maximum echo packet size. This should correspond to the MTU\n"
-        "                of the network between client and server, which is usually 1500\n"
-        "                over Ethernet. Has to be the same on client and server. Defaults\n"
-        "                to 1500.\n"
-        "  -w polls      Number of echo requests the client sends in advance for the\n"
-        "                server to reply to. 0 disables polling, which is the best choice\n"
-        "                if the network allows unlimited echo replies. Defaults to 10.\n"
-        "  -i            Change echo id on every echo request. May help with buggy\n"
-        "                routers. May impact performance with others.\n"
-        "  -q            Change echo sequence number on every echo request. May help with\n"
-        "                buggy routers. May impact performance with others.\n"
-        "  -f            Run in foreground.\n"
-        "  -v            Print debug information.\n";
-}
-
-int main(int argc, char *argv[])
-{
     string serverName;
     string userName;
     string passphrase;
@@ -112,10 +64,171 @@ int main(int argc, char *argv[])
     bool changeEchoSeq = false;
     bool verbose = false;
 
+static void sig_term_handler(int)
+{
+    syslog(LOG_INFO, "SIGTERM received");
+    if (worker)
+        worker->stop();
+}
+
+static void sig_int_handler(int)
+{
+    syslog(LOG_INFO, "SIGINT received");
+    if (worker)
+        worker->stop();
+}
+
+static void usage()
+{
+    std::cerr <<
+        "Hans - IP over ICMP version 1.2\n\n"
+        "RUN AS CLIENT\n"
+        "  hans -c server [-fv] [-p passphrase] [-u user] [-d tun_device]\n"
+        "                 [-m reference_mtu] [-w polls] [-F hans.conf]\n\n"
+        "RUN AS SERVER (Linux only)\n"
+        "  hans -s network [-fvr] [-p passphrase] [-u user] [-d tun_device]\n"
+        "                  [-m reference_mtu] [-a ip] [-F hans.conf]\n\n"
+        "ARGUMENTS\n"
+        "  -c server     Run as client.  Connect to given server address.\n"
+        "  -s network    Run as server.  Use given network address on virtual interfaces.\n"
+        "  -p passphrase Set passphrase.\n"
+        "  -u username   Change user under which the program runs.\n"
+        "  -a ip         Request assignment of given tunnel IP address from the server.\n"
+        "  -r            Respond to ordinary pings in server mode.\n"
+        "  -d device     Use given tun device.\n"
+        "  -m mtu        Set maximum echo packet size.  This should correspond to the MTU\n"
+        "                of the network between client and server, which is usually 1500\n"
+        "                over Ethernet.  Has to be the same on client and server.\n"
+        "                Defaults to 1500.\n"
+        "  -w polls      Number of echo requests the client sends in advance for the\n"
+        "                server to reply to.  0 disables polling, which is the best\n"
+        "                choice if the network allows unlimited echo replies.  Defaults\n"
+        "                to 10.\n"
+        "  -i            Change echo ID on every echo request.  May help with buggy\n"
+        "                routers.  May impact performance with others.\n"
+        "  -q            Change echo sequence number on every echo request.  May help\n"
+        "                with buggy routers; may impact performance with others.\n"
+        "  -f            Run in foreground.\n"
+        "  -v            Print debug information.\n"
+        "  -F confFile   Additional configuration file to load during the processing\n"
+        "                of all command-line arguments.\n";
+}
+
+bool readConf(const string confFile, const bool okIfNotExist = false)
+{
+    // Open configuration file
+    std::ifstream ifs(confFile.c_str()); // Open with RAII, which closes automatically
+    if (!ifs.is_open()) {
+      if (okIfNotExist) return true; // Conditionally don't report this error
+      std::cerr << "cannot open file " << confFile << std::endl;
+      return false;
+    }
+
+    // Process all lines in the configuration file
+    string line;
+    int line_count = 0; // We use this to include the line number if there's an error
+    while (std::getline(ifs, line)) {
+      line_count++;
+      line.erase(0, line.find_first_not_of(" \t")); // Trim leading whitespace
+      if (line.empty()) continue; // Ignore empty lines
+      if (line[0] == '#') continue; // Ignore comments
+
+      // Split directive from value
+      int offset = line.find_first_of(" \t");
+      if (offset == string::npos) {
+        std::cerr << "unrecognized directive in " << confFile << "[" << line_count << "]: " << line << std::endl;
+        return false;
+      }
+      string directive = line.substr(0, offset);
+      string value = line.substr(offset);
+      value.erase(0, value.find_first_not_of(" \t")); // Trim leading whitespace
+      value.erase(value.find_last_not_of(" \t") + 1); // Trim trailing whitspace
+      // std::cout << "directive=[" << directive << "] value=[" << value << "]" << std::endl; // Debug
+
+      // Process directives
+             if (directive == "Foreground") { // -f
+               if (value == "1" || value == "Yes" || value == "On") { foreground = true;
+        } else if (value == "0" || value == "No" || value == "Off") { foreground = false;
+        } else {
+          std::cerr << "Invalid parameter in " << confFile << "[" << line_count << "]: " << line << std::endl
+                    << "  must be one of:  0, No, Off, 1, Yes, On" << std::endl;
+          return false;
+        }
+      } else if (directive == "Username") { // -u
+        userName = value;
+      } else if (directive == "Device") { // -d
+        device = value;
+      } else if (directive == "Passphrase") { // -p
+        passphrase = value;
+      } else if (directive == "Client") { // -c
+        isClient = true;
+        serverName = value;
+      } else if (directive == "Server") { // -s
+        isServer = true;
+        network = ntohl(inet_addr(value.c_str()));
+        if (network == INADDR_NONE) {
+          std::cerr << "invalid network in " << confFile << "[" << line_count << "]: " << line << std::endl;
+          return false;
+        }
+      } else if (directive == "MTU") { // -m
+        mtu = atoi(value.c_str());
+      } else if (directive == "MaxPolls") { // -w
+        maxPolls = atoi(value.c_str());
+      } else if (directive == "RespondToPing") { // -r
+               if (value == "1" || value == "Yes" || value == "On") { answerPing = true;
+        } else if (value == "0" || value == "No" || value == "Off") { answerPing = false;
+        } else {
+          std::cerr << "Invalid parameter in " << confFile << "[" << line_count << "]: " << line << std::endl
+                    << "  must be one of:  0, No, Off, 1, Yes, On" << std::endl;
+          return false;
+        }
+      } else if (directive == "ChangeEchoSequence") { // -q
+               if (value == "1" || value == "Yes" || value == "On") { changeEchoSeq = true;
+        } else if (value == "0" || value == "No" || value == "Off") { changeEchoSeq = false;
+        } else {
+          std::cerr << "Invalid parameter in " << confFile << "[" << line_count << "]: " << line << std::endl
+                    << "  must be one of:  0, No, Off, 1, Yes, On" << std::endl;
+          return false;
+        }
+      } else if (directive == "ChangeEchoID") { // -i
+               if (value == "1" || value == "Yes" || value == "On") { changeEchoId = true;
+        } else if (value == "0" || value == "No" || value == "Off") { changeEchoId = false;
+        } else {
+          std::cerr << "Invalid parameter in " << confFile << "[" << line_count << "]: " << line << std::endl
+                    << "  must be one of:  0, No, Off, 1, Yes, On" << std::endl;
+          return false;
+        }
+      } else if (directive == "Verbose") { // -v
+               if (value == "1" || value == "Yes" || value == "On") { verbose = true;
+        } else if (value == "0" || value == "No" || value == "Off") { verbose = false;
+        } else {
+          std::cerr << "Invalid parameter in " << confFile << "[" << line_count << "]: " << line << std::endl
+                    << "  must be one of:  0, No, Off, 1, Yes, On" << std::endl;
+          return false;
+        }
+      } else if (directive == "RequestIP") { // -a
+        clientIp = ntohl(inet_addr(value.c_str()));
+      } else {
+        std::cerr << "unrecognized directive in " << confFile << "[" << line_count << "]: " << line << std::endl;
+        return false;
+      }
+
+    }
+
+    return true;
+}
+
+int main(int argc, char *argv[])
+{
     openlog(argv[0], LOG_PERROR, LOG_DAEMON);
 
+    // Read default configuration file /etc/hans.conf before processing
+    // command-line arguments (which effectively override those values).
+    //
+    if (!readConf("/etc/hans.conf", true)) return 1;
+
     int c;
-    while ((c = getopt(argc, argv, "fru:d:p:s:c:m:w:qiva:")) != -1)
+    while ((c = getopt(argc, argv, "fru:d:p:s:c:m:w:qiva:F:")) != -1)
     {
         switch(c) {
             case 'f':
@@ -161,6 +274,9 @@ int main(int argc, char *argv[])
                 break;
             case 'a':
                 clientIp = ntohl(inet_addr(optarg));
+                break;
+            case 'F':
+                if (!readConf(optarg)) return 1;
                 break;
             default:
                 usage();
@@ -261,4 +377,5 @@ int main(int argc, char *argv[])
     }
 
     return 0;
+
 }
