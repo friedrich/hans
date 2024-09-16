@@ -36,6 +36,12 @@
 #include <w32api/windows.h>
 #endif
 
+#ifdef ANDROID
+#define IFCONFIG_PATH "ifconfig "
+#else
+#define IFCONFIG_PATH "/sbin/ifconfig "
+#endif
+
 typedef ip IpHeader;
 
 using std::string;
@@ -77,7 +83,7 @@ Tun::Tun(const string *device, int mtu)
             << "\" mtu=" << mtu;
     winsystem(cmdline.str().data());
 #else
-    cmdline << "/sbin/ifconfig " << this->device << " mtu " << mtu;
+    cmdline << IFCONFIG_PATH << this->device << " mtu " << mtu;
     if (system(cmdline.str().data()) != 0)
         syslog(LOG_ERR, "could not set tun device mtu");
 #endif
@@ -102,11 +108,11 @@ void Tun::setIp(uint32_t ip, uint32_t destIp)
     if (!tun_set_ip(fd, ip, ip & 0xffffff00, 0xffffff00))
         syslog(LOG_ERR, "could not set tun device driver ip address: %s", tun_last_error());
 #elif LINUX
-    cmdline << "/sbin/ifconfig " << device << " " << ips << " netmask 255.255.255.0";
+    cmdline << IFCONFIG_PATH << device << " " << ips << " netmask 255.255.255.0";
     if (system(cmdline.str().data()) != 0)
         syslog(LOG_ERR, "could not set tun device ip address");
 #else
-    cmdline << "/sbin/ifconfig " << device << " " << ips << " " << destIps
+    cmdline << IFCONFIG_PATH << device << " " << ips << " " << destIps
             << " netmask 255.255.255.255";
     if (system(cmdline.str().data()) != 0)
         syslog(LOG_ERR, "could not set tun device ip address");

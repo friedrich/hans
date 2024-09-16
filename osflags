@@ -16,7 +16,11 @@ ld)
 c)
     case $OS in
         LINUX)
-            echo $FLAGS -DHAVE_LINUX_IF_TUN_H -DLINUX
+            if [ `uname -o | tr "a-z" "A-Z"` = "ANDROID" ]; then
+                echo $FLAGS -DHAVE_LINUX_IF_TUN_H -DLINUX -DANDROID
+            else
+                echo $FLAGS -DHAVE_LINUX_IF_TUN_H -DLINUX
+            fi
         ;;
         CYGWIN*)
             echo $FLAGS -DWIN32

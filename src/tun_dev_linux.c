@@ -37,6 +37,12 @@
 /* #include "vtun.h"
 #include "lib.h" */
 
+#ifdef ANDROID
+#define TUN_PATH "/dev/tun"
+#else
+#define TUN_PATH "/dev/net/tun"
+#endif
+
 /* 
  * Allocate TUN device, returns opened fd. 
  * Stores dev name in the first arg(must be large enough).
@@ -87,7 +93,7 @@ static int tun_open_common(char *dev, int istun)
     struct ifreq ifr;
     int fd;
 
-    if ((fd = open("/dev/net/tun", O_RDWR)) < 0)
+    if ((fd = open(TUN_PATH, O_RDWR)) < 0)
        return tun_open_common0(dev, istun);
 
     memset(&ifr, 0, sizeof(ifr));

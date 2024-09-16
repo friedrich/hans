@@ -1,0 +1,13 @@
+[Unit]
+Description=Hans IP over ICMP tunneling daemon
+After=syslog.target network-online.target
+Wants=network-online.target
+
+[Service]
+Type=forking
+EnvironmentFile=/opt/hans/hans.conf
+Restart=on-abort
+ExecStart=/opt/hans/hans -s $IP -p $PASS -u $USER
+
+[Install]
+WantedBy=multi-user.target
