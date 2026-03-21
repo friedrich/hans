@@ -17,15 +17,23 @@
  *
  */
 
+/* win32_compat.h must be the first include on Windows. */
+#ifdef _WIN32
+#  include "win32_compat.h"
+#endif
+
 #include "server.h"
 #include "client.h"
 #include "config.h"
 #include "utility.h"
 
 #include <string.h>
-#include <arpa/inet.h>
-#include <syslog.h>
 #include <iostream>
+
+#ifndef _WIN32
+#  include <arpa/inet.h>
+#  include <syslog.h>
+#endif
 
 using std::string;
 using std::cout;

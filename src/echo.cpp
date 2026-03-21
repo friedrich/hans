@@ -17,28 +17,39 @@
  *
  */
 
+/* win32_compat.h must be the first include on Windows. */
+#ifdef _WIN32
+#  include "win32_compat.h"
+#endif
+
 #include "echo.h"
 #include "exception.h"
 
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <netinet/in_systm.h>
-#include <netinet/in.h>
-#include <netinet/ip.h>
-#include <arpa/inet.h>
-#include <unistd.h>
-#include <errno.h>
-#include <syslog.h>
+#ifdef _WIN32
+   /* struct ip defined in win32_compat.h; winsock2 provides socket API */
+#  define CLOSE_SOCKET(fd)  closesocket((SOCKET)(uintptr_t)(fd))
+#else
+#  include <sys/socket.h>
+#  include <sys/types.h>
+#  include <netinet/in_systm.h>
+#  include <netinet/in.h>
+#  include <netinet/ip.h>
+#  include <arpa/inet.h>
+#  include <unistd.h>
+#  include <errno.h>
+#  include <syslog.h>
+#  define CLOSE_SOCKET(fd)  close(fd)
+#endif
+
 #include <stdio.h>
 #include <string.h>
-#include <sys/types.h>
 
 typedef ip IpHeader;
 
 Echo::Echo(int maxPayloadSize)
 {
-    fd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
-    if (fd == -1)
+    fd = (hans_fd_t)socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
+    if (fd == (hans_fd_t)-1)
         throw Exception("creating icmp socket", true);
 
     bufferSize = maxPayloadSize + headerSize();
@@ -48,7 +59,7 @@ Echo::Echo(int maxPayloadSize)
 
 Echo::~Echo()
 {
-    close(fd);
+    CLOSE_SOCKET(fd);
 }
 
 int Echo::headerSize()
@@ -73,7 +84,10 @@ void Echo::send(int payloadLength, uint32_t realIp, bool reply, uint16_t id, uin
     header->chksum = 0;
     header->chksum = icmpChecksum(sendBuffer.data() + sizeof(IpHeader), payloadLength + sizeof(EchoHeader));
 
-    int result = sendto(fd, sendBuffer.data() + sizeof(IpHeader), payloadLength + sizeof(EchoHeader), 0, (struct sockaddr *)&target, sizeof(struct sockaddr_in));
+    int result = sendto((SOCKET)(uintptr_t)fd,
+                        sendBuffer.data() + sizeof(IpHeader),
+                        payloadLength + (int)sizeof(EchoHeader), 0,
+                        (struct sockaddr *)&target, sizeof(struct sockaddr_in));
     if (result == -1)
         syslog(LOG_ERR, "error sending icmp packet: %s", strerror(errno));
 }
@@ -83,7 +97,10 @@ int Echo::receive(uint32_t &realIp, bool &reply, uint16_t &id, uint16_t &seq)
     struct sockaddr_in source;
     int source_addr_len = sizeof(struct sockaddr_in);
 
-    int dataLength = recvfrom(fd, receiveBuffer.data(), bufferSize, 0, (struct sockaddr *)&source, (socklen_t *)&source_addr_len);
+    int dataLength = recvfrom((SOCKET)(uintptr_t)fd,
+                              receiveBuffer.data(), bufferSize, 0,
+                              (struct sockaddr *)&source,
+                              (socklen_t *)&source_addr_len);
     if (dataLength == -1)
     {
         syslog(LOG_ERR, "error receiving icmp packet: %s", strerror(errno));

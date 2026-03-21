@@ -20,7 +20,7 @@
 #ifndef TUN_H
 #define TUN_H
 
-#include "tun_dev.h"
+#include "tun_dev.h"   /* also defines hans_fd_t */
 
 #include <string>
 #include <stdint.h>
@@ -31,7 +31,7 @@ public:
     Tun(const std::string *device, int mtu);
     ~Tun();
 
-    int getFd() { return fd; }
+    hans_fd_t getFd() { return fd; }
 
     int read(char *buffer);
     int read(char *buffer, uint32_t &sourceIp, uint32_t &destIp);
@@ -43,7 +43,7 @@ protected:
     std::string device;
 
     int mtu;
-    int fd;
+    hans_fd_t fd;
 };
 
 #endif

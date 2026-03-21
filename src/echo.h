@@ -24,13 +24,23 @@
 #include <vector>
 #include <stdint.h>
 
+/* hans_fd_t: intptr_t on Windows (covers 64-bit SOCKET), int on POSIX */
+#ifdef _WIN32
+#  include "win32_compat.h"
+#else
+#  ifndef HANS_FD_T_DEFINED
+#  define HANS_FD_T_DEFINED
+   typedef int hans_fd_t;
+#  endif
+#endif
+
 class Echo
 {
 public:
     Echo(int maxPayloadSize);
     ~Echo();
 
-    int getFd() { return fd; }
+    hans_fd_t getFd() { return fd; }
 
     void send(int payloadLength, uint32_t realIp, bool reply, uint16_t id, uint16_t seq);
     int receive(uint32_t &realIp, bool &reply, uint16_t &id, uint16_t &seq);
@@ -51,7 +61,7 @@ protected:
 
     uint16_t icmpChecksum(const char *data, int length);
 
-    int fd;
+    hans_fd_t fd;
     int bufferSize;
     std::vector<char> sendBuffer;
     std::vector<char> receiveBuffer;

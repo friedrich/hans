@@ -17,11 +17,18 @@
  *
  */
 
+/* win32_compat.h must be the first include on Windows. */
+#ifdef _WIN32
+#  include "win32_compat.h"
+#endif
+
 #include "auth.h"
 #include "sha1.h"
 #include "utility.h"
 
-#include <arpa/inet.h>
+#ifndef _WIN32
+#  include <arpa/inet.h>
+#endif
 
 Auth::Auth(const std::string &passphrase)
     : passphrase(passphrase)

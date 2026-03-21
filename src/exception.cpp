@@ -17,6 +17,11 @@
  *
  */
 
+/* win32_compat.h must be the first include on Windows. */
+#ifdef _WIN32
+#  include "win32_compat.h"
+#endif
+
 #include "exception.h"
 
 #include <errno.h>
