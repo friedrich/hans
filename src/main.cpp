@@ -17,23 +17,33 @@
  *
  */
 
+/* win32_compat.h must be the first include on Windows so that <ctime> is
+ * processed before windows.h can corrupt the _INC_TIME include guard. */
+#ifdef _WIN32
+#  include "win32_compat.h"
+#endif
+
 #include "client.h"
 #include "server.h"
 #include "exception.h"
 
+#ifdef _WIN32
+   /* winsock2, syslog, getopt, gettimeofday, daemon already via win32_compat */
+#else
+#  include <arpa/inet.h>
+#  include <netinet/in.h>
+#  include <sys/types.h>
+#  include <pwd.h>
+#  include <netdb.h>
+#  include <syslog.h>
+#  include <unistd.h>
+#  include <sys/socket.h>
+#endif
+
 #include <iostream>
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <sys/types.h>
 #include <stdlib.h>
-#include <pwd.h>
-#include <netdb.h>
-// #include <uuid/uuid.h>
 #include <string.h>
 #include <errno.h>
-#include <syslog.h>
-#include <unistd.h>
-#include <sys/socket.h>
 #include <signal.h>
 #include <memory>
 
@@ -94,6 +104,9 @@ static void usage()
 
 int main(int argc, char *argv[])
 {
+#ifdef _WIN32
+    hans_winsock_init();
+#endif
     string serverName;
     string userName;
     string passphrase;
@@ -189,10 +202,10 @@ int main(int argc, char *argv[])
 
     if (!userName.empty())
     {
-#ifdef WIN32
+#ifdef _WIN32
         syslog(LOG_ERR, "dropping privileges is not supported on Windows");
         return 1;
-#endif
+#else
         passwd *pw = getpwnam(userName.data());
 
         if (pw != NULL)
@@ -205,6 +218,7 @@ int main(int argc, char *argv[])
             syslog(LOG_ERR, "user not found");
             return 1;
         }
+#endif
     }
 
     if (!verbose)
@@ -247,8 +261,12 @@ int main(int argc, char *argv[])
 
         if (!foreground)
         {
+#ifdef _WIN32
+            syslog(LOG_INFO, "daemon mode not supported on Windows; running in foreground");
+#else
             syslog(LOG_INFO, "detaching from terminal");
             daemon(0, 0);
+#endif
         }
 
         worker->run();

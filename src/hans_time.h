@@ -17,10 +17,14 @@
  *
  */
 
-#ifndef TIME_H
-#define TIME_H
+#ifndef HANS_TIME_H
+#define HANS_TIME_H
 
-#include <sys/time.h>
+#ifdef _WIN32
+#  include "win32_compat.h"   /* provides struct timeval via winsock2.h */
+#else
+#  include <sys/time.h>
+#endif
 
 class Time
 {

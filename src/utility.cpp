@@ -17,6 +17,12 @@
  *
  */
 
+/* win32_compat.h must be the first include on Windows so that <ctime> is
+ * processed before windows.h corrupts the _INC_TIME include guard. */
+#ifdef _WIN32
+#  include "win32_compat.h"
+#endif
+
 #include "utility.h"
 
 #include <stdlib.h>

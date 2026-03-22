@@ -17,7 +17,12 @@
  *
  */
 
-#include "time.h"
+/* win32_compat.h must be the first include on Windows. */
+#ifdef _WIN32
+#  include "win32_compat.h"
+#endif
+
+#include "hans_time.h"
 
 const Time Time::ZERO = Time(0);
 

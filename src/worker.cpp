@@ -17,18 +17,33 @@
  *
  */
 
+/* win32_compat.h must be the first include on Windows. */
+#ifdef _WIN32
+#  include "win32_compat.h"
+#endif
+
 #include "worker.h"
 #include "tun.h"
 #include "exception.h"
 #include "config.h"
 
 #include <string.h>
-#include <syslog.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <sys/select.h>
-#include <grp.h>
 #include <iostream>
+
+#ifdef _WIN32
+   /* select(), fd_set, FD_* from winsock2.h (via win32_compat.h above) */
+#else
+#  include <syslog.h>
+#  include <sys/types.h>
+#  include <unistd.h>
+#  include <sys/select.h>
+#  include <grp.h>
+#  include <stdint.h>
+   /* On POSIX, SOCKET is just int; uintptr_t casts are identity ops */
+#  ifndef SOCKET
+#    define SOCKET int
+#  endif
+#endif
 
 using std::cout;
 using std::endl;
@@ -92,7 +107,13 @@ void Worker::run()
     now = Time::now();
     alive = true;
 
+    /* On POSIX, select() needs maxFd+1. On Windows the first argument
+       is ignored, but we compute it anyway for source compatibility. */
+#ifdef _WIN32
+    int maxFd = 0;  /* ignored by Winsock select() */
+#else
     int maxFd = echo.getFd() > tun.getFd() ? echo.getFd() : tun.getFd();
+#endif
 
     while (alive)
     {
@@ -100,8 +121,9 @@ void Worker::run()
         Time timeout;
 
         FD_ZERO(&fs);
-        FD_SET(tun.getFd(), &fs);
-        FD_SET(echo.getFd(), &fs);
+        /* On Windows, FD_SET expects SOCKET (UINT_PTR); cast via uintptr_t */
+        FD_SET((SOCKET)(uintptr_t)tun.getFd(),  &fs);
+        FD_SET((SOCKET)(uintptr_t)echo.getFd(), &fs);
 
         if (nextTimeout != Time::ZERO)
         {
@@ -112,7 +134,7 @@ void Worker::run()
 
         // wait for data or timeout
         timeval *timeval = nextTimeout != Time::ZERO ? &timeout.getTimeval() : NULL;
-        int result = select(maxFd + 1 , &fs, NULL, NULL, timeval);
+        int result = select(maxFd + 1, &fs, NULL, NULL, timeval);
         if (result == -1)
         {
             if (alive)
@@ -131,7 +153,7 @@ void Worker::run()
         }
 
         // icmp data
-        if (FD_ISSET(echo.getFd(), &fs))
+        if (FD_ISSET((SOCKET)(uintptr_t)echo.getFd(), &fs))
         {
             bool reply;
             uint16_t id, seq;
@@ -163,7 +185,7 @@ void Worker::run()
         }
 
         // data from tun
-        if (FD_ISSET(tun.getFd(), &fs))
+        if (FD_ISSET((SOCKET)(uintptr_t)tun.getFd(), &fs))
         {
             uint32_t sourceIp, destIp;
 

@@ -17,35 +17,45 @@
  *
  */
 
+/* win32_compat.h must be the first include on Windows. */
+#ifdef _WIN32
+#  include "win32_compat.h"
+#endif
+
 #include "tun.h"
 #include "exception.h"
 #include "utility.h"
 
-#include <arpa/inet.h>
-#include <sys/types.h>
-#include <netinet/in_systm.h>
-#include <netinet/in.h>
-#include <netinet/ip.h>
-#include <syslog.h>
+#ifdef _WIN32
+   /* struct ip, winsock2, windows.h already included via win32_compat.h above */
+#else
+#  include <arpa/inet.h>
+#  include <sys/types.h>
+#  include <netinet/in_systm.h>
+#  include <netinet/in.h>
+#  include <netinet/ip.h>
+#  include <syslog.h>
+#endif
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 #include <sstream>
-
-#ifdef WIN32
-#include <w32api/windows.h>
-#endif
+#include <vector>
 
 typedef ip IpHeader;
 
 using std::string;
 
-#ifdef WIN32
-static void winsystem(char *cmd)
+#ifdef _WIN32
+static void winsystem(const char *cmd)
 {
-    STARTUPINFO info = { sizeof(info) };
+    /* CreateProcessA requires a mutable command-line buffer */
+    std::vector<char> buf(cmd, cmd + strlen(cmd) + 1);
+    STARTUPINFOA info = { sizeof(info) };
     PROCESS_INFORMATION processInfo;
-    if (CreateProcess(NULL, cmd, NULL, NULL, TRUE, 0, NULL, NULL, &info, &processInfo))
+    if (CreateProcessA(NULL, buf.data(), NULL, NULL, TRUE, 0,
+                       NULL, NULL, &info, &processInfo))
     {
         WaitForSingleObject(processInfo.hProcess, INFINITE);
         CloseHandle(processInfo.hProcess);
@@ -72,7 +82,7 @@ Tun::Tun(const string *device, int mtu)
 
     std::stringstream cmdline;
 
-#ifdef WIN32
+#ifdef _WIN32
     cmdline << "netsh interface ipv4 set subinterface \"" << this->device
             << "\" mtu=" << mtu;
     winsystem(cmdline.str().data());
@@ -94,14 +104,14 @@ void Tun::setIp(uint32_t ip, uint32_t destIp)
     string ips = Utility::formatIp(ip);
     string destIps = Utility::formatIp(destIp);
 
-#ifdef WIN32
+#ifdef _WIN32
     cmdline << "netsh interface ip set address name=\"" << device << "\" "
             << "static " << ips << " 255.255.255.0";
     winsystem(cmdline.str().data());
 
     if (!tun_set_ip(fd, ip, ip & 0xffffff00, 0xffffff00))
         syslog(LOG_ERR, "could not set tun device driver ip address: %s", tun_last_error());
-#elif LINUX
+#elif defined(LINUX)
     cmdline << "/sbin/ifconfig " << device << " " << ips << " netmask 255.255.255.0";
     if (system(cmdline.str().data()) != 0)
         syslog(LOG_ERR, "could not set tun device ip address");

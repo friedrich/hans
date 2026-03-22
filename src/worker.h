@@ -20,12 +20,17 @@
 #ifndef WORKER_H
 #define WORKER_H
 
-#include "time.h"
+#include "hans_time.h"
 #include "echo.h"
 #include "tun.h"
 
 #include <string>
-#include <sys/types.h>
+
+#ifdef _WIN32
+#  include "win32_compat.h"   /* provides uid_t, gid_t, hans_fd_t */
+#else
+#  include <sys/types.h>
+#endif
 
 class Worker
 {

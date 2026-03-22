@@ -17,6 +17,11 @@
  *
  */
 
+/* win32_compat.h must be the first include on Windows. */
+#ifdef _WIN32
+#  include "win32_compat.h"
+#endif
+
 #include "client.h"
 #include "server.h"
 #include "exception.h"
@@ -24,9 +29,12 @@
 #include "utility.h"
 
 #include <string.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <syslog.h>
+
+#ifndef _WIN32
+#  include <arpa/inet.h>
+#  include <netinet/in.h>
+#  include <syslog.h>
+#endif
 
 using std::vector;
 using std::string;
